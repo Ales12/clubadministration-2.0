@@ -216,7 +216,6 @@ function clubadministration_install()
 	<tr><td align="center">
 		<table width="100%">
 		{$club_bit_own}
-
 		</table></td>
 		<tr>
 </table>
@@ -703,7 +702,6 @@ function clubadministration()
         $club_select = $db->query("SELECT *
             from " . TABLE_PREFIX . "clubs
             where club_id = '" . $club_id . "'
-
             ");
 
         $club = $db->fetch_array($club_select);
@@ -873,7 +871,7 @@ function clubadministration_modcp()
             $club_desc = $parser->parse_message($club['club_description'], $options);
             $club_cat = $club['club_category'];
             $club_id = $club['club_id'];
-
+ echo($club_id);
             //Club editieren oder Löschen
             $club_edit = "<a href='modcp.php?action=clubadministration_edit&clubedit={$club_id}'>editieren</a>";
             $club_delete = "<a href='modcp.php?action=clubadministration&clubdelete={$club_id}'>löschen</a>";
@@ -883,7 +881,7 @@ function clubadministration_modcp()
 //Club löschen
         $club_delete = $mybb->input['clubdelete'];
         if($club_delete){
-            $db->update_query("clubs",  "club_id = '".$club_delete."'");
+            $db->delete_query("clubs",  "club_id = '".$club_delete."'");
             redirect("modcp.php?action=clubadministration");
         }
 
@@ -902,7 +900,6 @@ function clubadministration_modcp()
         $club_select = $db->query("SELECT *
             from " . TABLE_PREFIX . "clubs
             where club_id = '" . $club_id . "'
-
             ");
 
         $club = $db->fetch_array($club_select);
