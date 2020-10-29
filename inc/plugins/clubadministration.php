@@ -121,6 +121,18 @@ function clubadministration_install()
     $db->insert_query("templates", $insert_array);
 
     $insert_array = array(
+        'title'        => 'clubadministration_alert',
+        'template'    => $db->escape_string('	<html>
+<head><div class="red_alert"><a href=\'modcp.php?action=clubadministration\'>
+Aktuell sind {$count} offene Clubs vorhanden. </a>
+</div>'),
+        'sid'        => '-1',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
         'title'        => 'clubadministration_add',
         'template'    => $db->escape_string('<form id="add_club" method="post" action="misc.php?action=clubs">
 		<table width="90%"><tr><td class="thead" colspan="3"><strong>{$lang->club_add}</strong></td></tr>
