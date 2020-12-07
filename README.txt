@@ -294,3 +294,5 @@ Aktuell sind {$count} offene Clubs vorhanden. </a>
 {$footer}
 </body>
 </html>
+
+### 
