@@ -398,6 +398,33 @@ Aktuell sind {$count} offene Clubs vorhanden. </a>
         'dateline'    => TIME_NOW
     );
     $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title'        => 'clubadministration_profile',
+        'template'    => $db->escape_string('<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder tfixed">
+	<colgroup>
+	<col style="width: 30%;" />
+	</colgroup>
+	<tr>
+		<td class="thead"><strong>{$lang->club_memprofile}</strong></td>
+	</tr>
+	{$club_memprofile_bit}
+</table>
+<br />'),
+        'sid'        => '-1',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title'        => 'clubadministration_profile_bit',
+        'template'    => $db->escape_string('<tr><td class="trow1">{$clubtitle} {$club_leader}</td></tr>'),
+        'sid'        => '-1',
+        'version'    => '',
+        'dateline'    => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
 }
 
 function clubadministration_is_installed()
@@ -751,6 +778,37 @@ function clubadministration()
     }
 }
 
+/*
+ * Clubs im Profil ausgeben
+ */
+$plugins->add_hook('member_profile_end', 'profile_clubadministration');
+
+function profile_clubadministration(){
+    global $mybb, $memprofile, $db, $templates, $club_memprofile, $lang, $theme, $clubtitle;
+    $lang->load('clubadministration');
+
+    $memuid = $memprofile['uid'];
+    $lang->load('clubadministration');
+    $club_query = $db->query("SELECT *
+        FROM ".TABLE_PREFIX."club_members cm
+        INNER JOIN ".TABLE_PREFIX."clubs c
+        USING (club_id)
+        where cm.uid = '".$memuid."'
+        ");
+
+    while($row = $db->fetch_array($club_query)){
+        $clubtitle = "";
+        $club_leader = "";
+        $clubtitle = $row['club_name'];
+
+        if($row['club_leader']  == 1){
+           $club_leader = "<b>&raquo; {$lang->club_leader}</b>";
+        }
+        eval("\$club_memprofile_bit .= \"" . $templates->get("clubadministration_profile_bit") . "\";");
+    }
+    eval("\$club_memprofile .= \"" . $templates->get("clubadministration_profile") . "\";");
+
+}
 
 $plugins->add_hook("modcp_nav", "clubadministration_modcp_nav");
 
@@ -955,6 +1013,7 @@ function clubadministration_modcp()
     }
 }
 
+
 $plugins->add_hook('global_intermediate', 'global_clubadministration_alert');
 
 function global_clubadministration_alert(){
@@ -974,3 +1033,4 @@ function global_clubadministration_alert(){
     }
 
 }
+
