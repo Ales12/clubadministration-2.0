@@ -474,7 +474,7 @@ function clubadministration_activate()
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
     find_replace_templatesets("header", "#".preg_quote('<navigation>')."#i", '{$clubadministration_alert} <navigation>');
     find_replace_templatesets("modcp_nav", "#".preg_quote('{$modcp_nav_users}')."#i", '{$modcp_nav_users}{$clubadmin_modcp}');
-
+    find_replace_templatesets("member_profile", "#".preg_quote('{$profilefields}')."#i", '{$profilefields}{$club_memprofile}');
 }
 
 function clubadministration_deactivate()
@@ -482,6 +482,7 @@ function clubadministration_deactivate()
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
     find_replace_templatesets("header", "#".preg_quote('{$clubadministration_alert}')."#i", '', 0);
     find_replace_templatesets("modcp_nav", "#".preg_quote('{$clubadmin_modcp}')."#i", '', 0);
+    find_replace_templatesets("member_profile", "#".preg_quote('{$club_memprofile}')."#i", '', 0);
 }
 
 // Backend Hooks
