@@ -295,4 +295,17 @@ Aktuell sind {$count} offene Clubs vorhanden. </a>
 </body>
 </html>
 
-### 
+### clubadministration_profile
+<table border="0" cellspacing="{$theme['borderwidth']}" cellpadding="{$theme['tablespace']}" class="tborder tfixed">
+	<colgroup>
+	<col style="width: 30%;" />
+	</colgroup>
+	<tr>
+		<td class="thead"><strong>{$lang->club_memprofile}</strong></td>
+	</tr>
+	{$club_memprofile_bit}
+</table>
+<br />
+
+### clubadministration_profile_bit
+<tr><td class="trow1">{$clubtitle} {$club_leader}</td></tr>
