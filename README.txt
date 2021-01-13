@@ -15,10 +15,9 @@
 <td class="thead"><h1>{$lang->club_welcome}</h1></td>
 </tr>
 <tr>
-		<td class="trow1" align="center" valign="top" width="90%">
+
 			{$clubadd_formular}
-		</td>
-		</tr>
+		
 	<tr>
 <td class="thead"><h1>{$lang->club_view}</h1></td>
 </tr>
