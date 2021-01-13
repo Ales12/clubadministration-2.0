@@ -96,13 +96,13 @@ function clubadministration_install()
 {$header}
 <table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
 <tr>
-<td class="thead"><strong>{$lang->club_welcome}</strong></td>
+<td class="thead"><h1>{$lang->club_welcome}</h1></td>
 </tr>
-<tr>
-		<td class="trow1" align="center" valign="top" width="90%">
 			{$clubadd_formular}
-		</td>
-		</tr>
+	
+	<tr>
+<td class="thead"><h1>{$lang->club_view}</h1></td>
+</tr>
 	<tr><td align="center">
 		{$clubs}
 	</td>
@@ -134,7 +134,9 @@ Aktuell sind {$count} offene Clubs vorhanden. </a>
 
     $insert_array = array(
         'title'        => 'clubadministration_add',
-        'template'    => $db->escape_string('<form id="add_club" method="post" action="misc.php?action=clubs">
+        'template'    => $db->escape_string('<tr>
+		<td class="trow1" align="center" valign="top" width="90%">
+			<form id="add_club" method="post" action="misc.php?action=clubs">
 		<table width="90%"><tr><td class="thead" colspan="3"><strong>{$lang->club_add}</strong></td></tr>
 			<tr><td class="trow1" align="center"><strong>{$lang->club_name}</strong></strong></td><td class="trow1" align="center"><strong>{$lang->club_desc}</strong><td class="trow1" align="center"><strong>{$lang->club_cat}</strong></td></tr>
 			<tr><td class="trow2" align="center"><input type="text" name="club_name" id="club_name" placeholder="Name des Clubs" class="textbox" style="width: 200px; height: 25px;" required /> </td>
@@ -147,7 +149,14 @@ Aktuell sind {$count} offene Clubs vorhanden. </a>
 			</tr>
 			<tr><td class="tcat" colspan="3" align="center"><input type="submit" name="addclub" value="Club hinzufügen" id="submit" class="button"></td></tr>
 		</table>
-</form>'),
+</form>
+<br />
+		</td>
+		</tr>
+<tr><td class="trow1" align="center" valign="top" width="90%">
+	<h2><a href="misc.php?action=ownclubs">Übersicht der eigenen Clubs</a></h2>
+	</td>
+	</tr>'),
         'sid'        => '-1',
         'version'    => '',
         'dateline'    => TIME_NOW
@@ -171,7 +180,7 @@ Aktuell sind {$count} offene Clubs vorhanden. </a>
     $insert_array = array(
         'title'        => 'clubadministration_clubs',
         'template'    => $db->escape_string('<div style="height: 250px; width: 180px; margin: 5px 10px;">
-	<div class="tcat" align="center"><strong>{$club_name}</strong>
+	<div class="tcat" align="center"><strong>{$club_name}</div>
 		<div class="trow2">{$club_desc}</div>
 		<div class="tcat"><strong>{$lang->club_leader}</strong></div>
 		<div class="trow1">{$get_leader}
@@ -803,7 +812,7 @@ function profile_clubadministration(){
         $clubtitle = $row['club_name'];
 
         if($row['club_leader']  == 1){
-           $club_leader = "<b>&raquo; {$lang->club_leader}</b>";
+            $club_leader = "<b>&raquo; {$lang->club_leader}</b>";
         }
         eval("\$club_memprofile_bit .= \"" . $templates->get("clubadministration_profile_bit") . "\";");
     }
@@ -942,7 +951,7 @@ function clubadministration_modcp()
             $club_desc = $parser->parse_message($club['club_description'], $options);
             $club_cat = $club['club_category'];
             $club_id = $club['club_id'];
- echo($club_id);
+            echo($club_id);
             //Club editieren oder Löschen
             $club_edit = "<a href='modcp.php?action=clubadministration_edit&clubedit={$club_id}'>editieren</a>";
             $club_delete = "<a href='modcp.php?action=clubadministration&clubdelete={$club_id}'>löschen</a>";
