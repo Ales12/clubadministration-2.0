@@ -1044,3 +1044,15 @@ function global_clubadministration_alert(){
 
 }
 
+/**
+ * Was passiert wenn ein User gelöscht wird. funktioniert aber nur, wenn EINZELNE Accounts gelöscht werden.
+ */
+$plugins->add_hook("admin_user_users_delete_commit_end", "clubadministration_delete");
+function clubadministration_delete()
+{
+    global $db, $cache, $mybb, $user;
+
+    $todelete = (int)$user['uid'];
+
+    $db->delete_query('club_members', "uid = " . $todelete . "");
+}
