@@ -180,7 +180,7 @@ Aktuell sind {$count} offene Clubs vorhanden. </a>
     $insert_array = array(
         'title'        => 'clubadministration_clubs',
         'template'    => $db->escape_string('<div style="height: 250px; width: 180px; margin: 5px 10px;">
-	<div class="tcat" align="center"><strong>{$club_name}</div>
+	<div class="tcat" align="center"><strong>{$club_name}</strong></div>
 		<div class="trow2">{$club_desc}</div>
 		<div class="tcat"><strong>{$lang->club_leader}</strong></div>
 		<div class="trow1">{$get_leader}
