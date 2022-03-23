@@ -14,8 +14,8 @@ if(class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
 function clubadministration_info()
 {
     return array(
-        "name"			=> "Clubverwaltung",
-        "description"	=> "Hier können User selbst Clubs anlegen und verwalten.",
+        "name"			=> "Club und Verein Verwaltung",
+        "description"	=> "Hier können User selbst Clubs und Vereine anlegen und verwalten.",
         "website"		=> "",
         "author"		=> "Ales",
         "authorsite"	=> "",
@@ -40,6 +40,7 @@ function clubadministration_install()
           `club_description` text CHARACTER SET utf8 NOT NULL,
           `club_category` varchar(500) CHARACTER SET utf8 NOT NULL,
           `club_creator` int(10) NOT NULL,
+          `club_leader` int(10) NOT NULL,
           `club_adminok` int(10)  DEFAULT 0 NOT NULL,
           PRIMARY KEY (`club_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
@@ -48,7 +49,6 @@ function clubadministration_install()
           `mem_id` int(10) NOT NULL auto_increment,
           `club_id` int(11) NOT NULL,
             `uid` int(10) NOT NULL,
-            `club_leader` int(10) NOT NULL,
           PRIMARY KEY (`mem_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
     }
@@ -1002,6 +1002,7 @@ function clubadministration_modcp()
         $delete_club = $mybb->input['delete'];
         if($delete_club){
             $db->delete_query("clubs", "club_id='{$delete_club}'");
+            $db->delete_query("club_members", "club_id='{$delete_club}'");
             redirect ("modcp.php?action=clubandsocietymodcp");
         }
 
@@ -1235,6 +1236,7 @@ function clubadministration_usercp(){
         $delete_club = $mybb->input['delete'];
         if($delete_club){
             $db->delete_query("clubs", "club_id='{$delete_club}'");
+            $db->delete_query("club_members", "club_id='{$delete_club}'");
             redirect ("usercp.php?action=ownclubandsociety");
         }
 
