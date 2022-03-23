@@ -73,7 +73,7 @@ function clubadministration_install()
             'title' => 'Clubkategorie',
             'description' => 'Welche Kategorien soll es an Clubs gehen? (Schüler, Studenten, Erwachsene):',
             'optionscode' => 'text',
-            'value' => 'Aktivitäten, Soziales, Kreatives, Sonstiges', // Default
+            'value' => 'Vereine, Clubs', // Default
             'disporder' => 1
         ),
             // A text setting
@@ -629,7 +629,7 @@ function clubadministration_activate()
     }
 
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
-
+    find_replace_templatesets("modcp_nav_users", "#".preg_quote('{$nav_ipsearch}').'#i', '{$nav_ipsearch} {$clubadmin_nav}');
 
 }
 
@@ -657,7 +657,7 @@ function clubadministration_deactivate()
         $alertTypeManager->deleteByCode('clubandsociety_rejected');
     }
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
-
+    find_replace_templatesets("modcp_nav_users", "#".preg_quote('{$clubadmin_nav}')."#i", '', 0);
 }
 
 // Backend Hooks
