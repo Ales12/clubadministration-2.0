@@ -14,8 +14,8 @@ if(class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
 function clubadministration_info()
 {
     return array(
-        "name"			=> "Club und Verein Verwaltung",
-        "description"	=> "Hier können User selbst Clubs und Vereine anlegen und verwalten.",
+        "name"			=> "Clubverwaltung",
+        "description"	=> "Hier können User selbst Clubs anlegen und verwalten.",
         "website"		=> "",
         "author"		=> "Ales",
         "authorsite"	=> "",
@@ -40,7 +40,6 @@ function clubadministration_install()
           `club_description` text CHARACTER SET utf8 NOT NULL,
           `club_category` varchar(500) CHARACTER SET utf8 NOT NULL,
           `club_creator` int(10) NOT NULL,
-          `club_leader` int(10) NOT NULL,
           `club_adminok` int(10)  DEFAULT 0 NOT NULL,
           PRIMARY KEY (`club_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
@@ -49,6 +48,7 @@ function clubadministration_install()
           `mem_id` int(10) NOT NULL auto_increment,
           `club_id` int(11) NOT NULL,
             `uid` int(10) NOT NULL,
+            `club_leader` int(10) NOT NULL,
           PRIMARY KEY (`mem_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
     }
@@ -73,7 +73,7 @@ function clubadministration_install()
             'title' => 'Clubkategorie',
             'description' => 'Welche Kategorien soll es an Clubs gehen? (Schüler, Studenten, Erwachsene):',
             'optionscode' => 'text',
-            'value' => 'Vereine, Clubs', // Default
+            'value' => 'Aktivitäten, Soziales, Kreatives, Sonstiges', // Default
             'disporder' => 1
         ),
             // A text setting
@@ -195,6 +195,15 @@ document.getElementById("defaultOpen").click();
 		<tr><td colspan="2" class="trow1" align="center"><input type="submit" name="add_clubsociety" id="add" class="button" value="{$lang->clubandsociety_addsubmit}"></td></tr>
 	</table>
 </form>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_addformular_link',
+        'template' => $db->escape_string('<div class="innerlist_nav"><a onclick="$(\'#addclub\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \'undefined\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">{$lang->clubandsociety_add}</a>	</div><div class="modal" id="addclub" style="display: none;">{$add_clubsociety}</div>'),
         'sid' => '-1',
         'version' => '',
         'dateline' => TIME_NOW
@@ -683,7 +692,7 @@ $plugins->add_hook('misc_start', 'clubadministration');
 // In the body of your plugin
 function clubadministration()
 {
-    global $mybb, $templates, $lang, $header, $headerinclude, $footer, $page, $db, $parser, $options, $club_category, $club_cat, $clubadmin_option, $club_leader, $club_bit, $clubmember_uid;
+    global $mybb, $templates, $lang, $header, $headerinclude, $footer, $page, $db, $parser, $options, $club_category, $club_cat, $clubadmin_option, $club_leader, $club_bit, $clubmember_uid, $menu;
     global $club_desc, $club_join, $club_members, $club_bit_member, $club_leave;
     $lang->load('clubadministration');
 
@@ -736,6 +745,7 @@ function clubadministration()
 		</tr>";
                 }
 
+               eval("\$add_link = \"" . $templates->get("clubadministration_addformular_link") . "\";");
                 eval("\$add_clubsociety = \"" . $templates->get("clubadministration_addformular") . "\";");
 
                 if(isset($mybb->input['add_clubsociety'])){
@@ -776,9 +786,10 @@ function clubadministration()
                 $default = "";
 
                 // muss per Hand angepasst werden, so dass es ein Default gibt!
-                if($club_overview_cat == 'Kreativ'){
+                if($club_overview_cat == 'Aktivitäten'){
                     $default = "id=\"defaultOpen\"";
                 }
+
                 $club_menu .="<button class=\"tablinks\" onclick=\"openCity(event, '{$club_overview_cat}')\"  {$default}>{$club_overview_cat}</button>";
 
 
@@ -865,7 +876,7 @@ function clubadministration()
                 redirect ("misc.php?action=clubandsociety_overview");
             }
 
-
+            eval("\$menu = \"".$templates->get("listen_nav")."\";");
             eval("\$page = \"" . $templates->get("clubadministration") . "\";");
             output_page($page);
         }
@@ -1002,7 +1013,6 @@ function clubadministration_modcp()
         $delete_club = $mybb->input['delete'];
         if($delete_club){
             $db->delete_query("clubs", "club_id='{$delete_club}'");
-            $db->delete_query("club_members", "club_id='{$delete_club}'");
             redirect ("modcp.php?action=clubandsocietymodcp");
         }
 
@@ -1236,7 +1246,6 @@ function clubadministration_usercp(){
         $delete_club = $mybb->input['delete'];
         if($delete_club){
             $db->delete_query("clubs", "club_id='{$delete_club}'");
-            $db->delete_query("club_members", "club_id='{$delete_club}'");
             redirect ("usercp.php?action=ownclubandsociety");
         }
 
