@@ -40,6 +40,7 @@ function clubadministration_install()
           `club_description` text CHARACTER SET utf8 NOT NULL,
           `club_category` varchar(500) CHARACTER SET utf8 NOT NULL,
           `club_creator` int(10) NOT NULL,
+	  `club_leader` int(10) NOT NULL,
           `club_adminok` int(10)  DEFAULT 0 NOT NULL,
           PRIMARY KEY (`club_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
@@ -47,8 +48,7 @@ function clubadministration_install()
         $db->query("CREATE TABLE `".TABLE_PREFIX."club_members` (
           `mem_id` int(10) NOT NULL auto_increment,
           `club_id` int(11) NOT NULL,
-            `uid` int(10) NOT NULL,
-            `club_leader` int(10) NOT NULL,
+            `club_uid` int(10) NOT NULL,
           PRIMARY KEY (`mem_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
     }
