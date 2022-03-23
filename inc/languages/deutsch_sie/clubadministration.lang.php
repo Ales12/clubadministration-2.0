@@ -1,25 +1,41 @@
 <?php
-$l['clubs'] = "Clubübersicht";
-$l['club_welcome'] = "Willkommen bei der Club Übersicht";
-$l['club_view'] = "Clubübersicht";
-$l['club_add'] = "Einen Club hinzufügen";
-$l['club_name'] = "Clubname";
-$l['club_desc'] = "Clubbeschreibung";
-$l['club_cat'] = "Clubkategorie";
-$l['club_all'] = "alle Eingetragenen Clubs";
-$l['club_leader'] = "Clubführung";
-$l['club_members'] = "Mitglieder";
-$l['club_own'] = "Übersicht eigene Clubs";
-$l['club_edit'] = "Club editieren";
-$l['club_modcp'] = "Komplette Clubverwaltung";
-$l['club_new'] = "neue Clubs bearbeiten";
-$l['club_option'] = "Annehmen/Ablehnen";
-$l['club_ok'] = "Club wurde angenommen";
-$l['club_ok_text'] = "Dein Club wurde angenommen. Du kannst dich nun unter <a href='misc.php?action=clubs'>Clubübersicht</a> eintragen.";
-$l['club_no'] = "Club wurde abgelehnt";
-$l['club_no_text'] = "Dein Club wurde abgelehnt. Sie können es unter <a href='misc.php?action=ownclubs'>Eigene Clubs</a> bearbeiten. <br />Sie können beim Team gerne erfragen, wieso dein Club abgelehnt wurde.";
-$l['club_all'] = "alle vorhandenen Clubs";
-$l['club_options'] = "Editieren/Löschen";
-$l['club_creator'] = "Clubersteller";
-$l['club_memprofile'] = "Eingeschriebene Clubs";
-$l['club_leader'] = "Clubführung";
+$l['clubandsociety_title'] = "Club- und Vereinverwaltung";
+
+// Formular
+$l['clubandsociety_add'] = "Einen neuen club oder Verein hinzufügen";
+$l['clubandsociety_addtitle'] = "Name des Clubs/Vereins:";
+$l['clubandsociety_addtype'] = "Club oder Verein?";
+$l['clubandsociety_addcat'] = "Kategorie:";
+$l['clubandsociety_addadmin'] = "Bist du auch Clubführer?";
+$l['clubandsociety_adddesc'] = "Beschreibe hier kurz den Club:";
+$l['clubandsociety_addsubmit'] = "Club/Verein hinzufügen";
+
+// Clubübersicht
+$l['clubandsociety_overview_leader'] = "Geführt von ";
+$l['clubandsociety_overview_member'] = "Mitglieder";
+$l['clubandsociety_overview_join'] = "Club/Verein eintreten";
+$l['clubandsociety_overview_leave'] = "verlassen";
+
+// Modcp
+$l['clubandsociety_modcp_nav'] = "Clubs/Vereine verwalten";
+$l['clubandsociety_modcp_nav_control'] = "neue Clubs/Vereine bearbeiten";
+$l['clubandsociety_modcp'] = "Alle Clubs/Vereine verwalten";
+$l['clubandsociety_modcp_control'] = "Neue Clubs/Vereine bearbeiten";
+$l['clubandsociety_modcp_creator'] = "Erstellt von ";
+$l['clubandsociety_modcp_accept'] = "Annehmen";
+$l['clubandsociety_modcp_decline'] = "Ablehnen";
+
+// optionen
+$l['clubandsociety_delete'] = "Löschen";
+$l['clubandsociety_edit'] = "Bearbeiten";
+$l['clubandsociety_editsubmit'] = "Club/Verein bearbeiten";
+$l['clubandsociety_edit_leader'] = "Geführt von
+<div class='smalltext'>Nur UID angeben!</div>";
+
+// user cp
+$l['clubandsociety_ucp_nav'] = "Eigene Clubs/Vereine verwalten";
+$l['clubandsociety_ucp'] = "Übersicht eigener Clubs/Vereine";
+
+// Alerts
+$l['clubandsociety_accepted'] = "{1} hat deinen {2} <b>{3}</b> akzeptiert.";
+$l['clubandsociety_rejected'] = "{1} hat deinen {2} <b>{3}</b> abgelehnt. Melde dich beim Team, wenn du Fragen dazu hast!";

@@ -6,6 +6,10 @@ if(!defined("IN_MYBB"))
     die("Direct initialization of this file is not allowed.");
 }
 
+// Alerts
+if(class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+    $plugins->add_hook("global_start", "clubadministrator_alert");
+}
 
 function clubadministration_info()
 {
@@ -32,6 +36,7 @@ function clubadministration_install()
         $db->query("CREATE TABLE `".TABLE_PREFIX."clubs` (
           `club_id` int(10) NOT NULL auto_increment,
           `club_name` varchar(500) CHARACTER SET utf8 NOT NULL,
+          `club_type` varchar(500) CHARACTER SET utf8 NOT NULL,
           `club_description` text CHARACTER SET utf8 NOT NULL,
           `club_category` varchar(500) CHARACTER SET utf8 NOT NULL,
           `club_creator` int(10) NOT NULL,
@@ -43,7 +48,7 @@ function clubadministration_install()
           `mem_id` int(10) NOT NULL auto_increment,
           `club_id` int(11) NOT NULL,
             `uid` int(10) NOT NULL,
-                 `club_leader` int(10) NOT NULL,
+            `club_leader` int(10) NOT NULL,
           PRIMARY KEY (`mem_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
     }
@@ -54,8 +59,8 @@ function clubadministration_install()
 
     $setting_group = array(
         'name' => 'clubadministrationsettings',
-        'title' => 'Clubverwaltung',
-        'description' => 'Hier sind alle Einstellungen für die Clubübersicht.',
+        'title' => 'Club- & Vereinverwaltung',
+        'description' => 'Hier sind alle Einstellungen für die Club- und Vereinverwaltung.',
         'disporder' => 3, // The order your setting group will display
         'isdefault' => 0
     );
@@ -68,9 +73,18 @@ function clubadministration_install()
             'title' => 'Clubkategorie',
             'description' => 'Welche Kategorien soll es an Clubs gehen? (Schüler, Studenten, Erwachsene):',
             'optionscode' => 'text',
-            'value' => 'Schüler, Studenten, Erwachsene', // Default
+            'value' => 'Vereine, Clubs', // Default
             'disporder' => 1
         ),
+            // A text setting
+            'club_admin' => array(
+                'title' => 'Clubführer',
+                'description' => 'Soll es einen Clubführer geben?:',
+                'optionscode' => 'yesno',
+                'value' => 1, // Default
+                'disporder' => 1
+            ),
+
     );
 
     foreach($setting_array as $name => $setting)
@@ -86,242 +100,213 @@ function clubadministration_install()
 
     //Templates
     $insert_array = array(
-        'title'        => 'clubadministration',
-        'template'    => $db->escape_string('	<html>
+        'title' => 'clubadministration',
+        'template' => $db->escape_string('<html>
 <head>
-<title>{$mybb->settings[\'bbname\']} - {$lang->clubs}</title>
+<title>{$mybb->settings[\'bbname\']} - {$lang->clubandsociety_title}</title>
 {$headerinclude}
+
 </head>
 <body>
 {$header}
 <table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
 <tr>
-<td class="thead"><h1>{$lang->club_welcome}</h1></td>
-</tr>
-			{$clubadd_formular}
+<td class="thead">
+	<strong>{$lang->clubandsociety_title}</strong>
+	</td>
+	</tr>
+	<tr><td>
+	<div class="club_addclub"><a onclick="$(\'#addclub\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \'undefined\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">{$lang->clubandsociety_add}</a>	</div><div class="modal" id="addclub" style="display: none;">{$add_clubsociety}</div>	
+		<div class="club_flex">
+			<div class="club_tab">
+				{$club_menu}
+			</div>
+		{$club_overview}
+		</div>
+		</td>
+	</tr>
+	</table>
+{$footer}
+</body>
+</html>
+
+<script>
+function openCity(evt, cityName) {
+  var i, tabcontent, tablinks;
+  tabcontent = document.getElementsByClassName("tabcontent");
+  for (i = 0; i < tabcontent.length; i++) {
+    tabcontent[i].style.display = "none";
+  }
+  tablinks = document.getElementsByClassName("tablinks");
+  for (i = 0; i < tablinks.length; i++) {
+    tablinks[i].className = tablinks[i].className.replace(" active", "");
+  }
+  document.getElementById(cityName).style.display = "block";
+  evt.currentTarget.className += "active";
+}
+
+// Get the element with id="defaultOpen" and click on it
+document.getElementById("defaultOpen").click();
+</script>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_addformular',
+        'template' => $db->escape_string('<form id="add_clubsociety"  method="post"  action="misc.php?action=clubandsociety_overview">
+	<table cellspacing="2" cellpadding="5" style="margin: auto;">
+		<tr><td class="tcat" colspan="2"><strong>{$lang->clubandsociety_add}</strong></td></tr>
+		<tr>
+			<td class="trow1" width="50%">
+				<strong>{$lang->clubandsociety_addtitle}</strong>
+			</td>
+			<td class="trow2" width="50%"><input type="text" class="textbox" placeholder="Der Titel des Clubs/Vereins" name="clubname" style="width: 200px;">
+			</td>	</tr>
+			<tr>
+						<td class="trow1" width="50%">
+				<strong>{$lang->clubandsociety_addtype}</strong>
+			</td>
 	
-	<tr>
-<td class="thead"><h1>{$lang->club_view}</h1></td>
-</tr>
-	<tr><td align="center">
-		{$clubs}
-	</td>
-		<tr>
-</table>
-</td>
-</tr>
-</table>
-{$footer}
-</body>
-</html>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_alert',
-        'template'    => $db->escape_string('	<html>
-<head><div class="red_alert"><a href=\'modcp.php?action=clubadministration\'>
-Aktuell sind {$count} offene Clubs vorhanden. </a>
-</div>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_add',
-        'template'    => $db->escape_string('<tr>
-		<td class="trow1" align="center" valign="top" width="90%">
-			<form id="add_club" method="post" action="misc.php?action=clubs">
-		<table width="90%"><tr><td class="thead" colspan="3"><strong>{$lang->club_add}</strong></td></tr>
-			<tr><td class="trow1" align="center"><strong>{$lang->club_name}</strong></strong></td><td class="trow1" align="center"><strong>{$lang->club_desc}</strong><td class="trow1" align="center"><strong>{$lang->club_cat}</strong></td></tr>
-			<tr><td class="trow2" align="center"><input type="text" name="club_name" id="club_name" placeholder="Name des Clubs" class="textbox" style="width: 200px; height: 25px;" required /> </td>
-			<td class="trow2" align="center"><textarea class="textarea" name="club_description" id="club_description" rows="3" cols="10" style="width: 95%">Beschreibe hier kurz deinen Club.</textarea></td>
-			<td class="trow2" align="center"><select name="club_category" required style="width: 200px; height: 25px;">
-					<option value="%">Kategorie wählen</option>
-{$club_category}
-					</select> 
-				</td>
-			</tr>
-			<tr><td class="tcat" colspan="3" align="center"><input type="submit" name="addclub" value="Club hinzufügen" id="submit" class="button"></td></tr>
-		</table>
-</form>
-<br />
-		</td>
+			<td class="trow2" width="50%">
+				<select name="clubtype">
+					<option>Club</option>
+					<option>Verein</option>
+				</select>
+			</td>
 		</tr>
-<tr><td class="trow1" align="center" valign="top" width="90%">
-	<h2><a href="misc.php?action=ownclubs">Übersicht der eigenen Clubs</a></h2>
-	</td>
-	</tr>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_bit_ownclubs',
-        'template'    => $db->escape_string('<tr><td class="thead" colspan="3">Clubgründungen von {$chara}</td></tr>
-<tr><td class="tcat"><strong>{$lang->club_name}</strong></td>
-	<td class="tcat"><strong>{$lang->club_desc}</strong></td>
-	<td class="tcat"><strong>{$lang->club_cat}</strong></td>
-</tr>
-{$club_own_bit}'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_clubs',
-        'template'    => $db->escape_string('<div style="height: 250px; width: 180px; margin: 5px 10px;">
-	<div class="tcat" align="center"><strong>{$club_name}</strong></div>
-		<div class="trow2">{$club_desc}</div>
-		<div class="tcat"><strong>{$lang->club_leader}</strong></div>
-		<div class="trow1">{$get_leader}
-			{$club_member_leader}
-		</div>
-				<div class="tcat"><strong>{$lang->club_members}</strong></div>
-		<div class="trow1">{$get_member}
-			{$club_member}
-		</div>
-</div>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_clubs_cat',
-        'template'    => $db->escape_string('<table width="90%">
-	<tr><td class="tcat"><strong>{$club_cat_overiew}</strong></td></tr>
-	<tr><td><div style="display: flex; flex-wrap: wrap;">
-		{$club_bit}
-		</div>
-		</td></tr>
-</table>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_members',
-        'template'    => $db->escape_string('<div>&raquo; {$user} {$club_leave}</div>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_ownclubs',
-        'template'    => $db->escape_string('	<html>
-<head>
-<title>{$mybb->settings[\'bbname\']} - {$lang->club_own}</title>
-{$headerinclude}
-</head>
-<body>
-{$header}
-<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
-<tr>
-<td class="thead"><strong>{$lang->club_own}</strong></td>
-</tr>
-	<tr><td align="center">
-		<table width="100%">
-		{$club_bit_own}
-		</table></td>
-		<tr>
-</table>
-</td>
-</tr>
-</table>
-{$footer}
-</body>
-</html>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_ownclubs_bit',
-        'template'    => $db->escape_string('<tr>
-	<td class="trow1">{$club_name}
-		<br />{$club_edit}</td>
-		<td class="trow1">{$club_desc}</td>
-		<td class="trow1">{$club_cat}</td>
-</tr>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_ownclubs_edit',
-        'template'    => $db->escape_string('	<html>
-<head>
-<title>{$mybb->settings[\'bbname\']} - {$lang->club_edit}</title>
-{$headerinclude}
-</head>
-<body>
-{$header}
-<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
-<tr>
-<td class="thead"><strong>{$lang->club_edit}</strong></td>
-</tr>
-<tr>
-		<td class="trow1" align="center" valign="top" width="90%">
-<form id="edit_club" method="post" action="misc.php?action=ownclubs_edit&club={$club_id}">
-	<input type="hidden" name="club_name" id="club_name" value="{$club_id}" class="textbox" />
-		<table width="90%">
-			<tr>
-				<td class="trow1" align="center"><strong>{$lang->club_name}</strong></td>	
-				<td class="trow2" align="center"><input type="text" name="club_name" id="club_name" value="{$club_name}" class="textbox" style="width: 200px; height: 25px;" required /> </td>	
-			</tr>
-			<tr>
-				<td class="trow1" align="center"><strong>{$lang->club_desc}</strong></td>
-				<td class="trow2" align="center"><textarea class="textarea" name="club_description" id="club_description" rows="3" cols="10" style="width: 95%">{$club_desc}</textarea></td></tr>
-				<tr>
-					<td class="trow1" align="center"><strong>{$lang->club_cat}</strong></td>		
-					<td class="trow2" align="center"><select name="club_category" required style="width: 200px; height: 25px;">
-					<option value="%">Kategorie wählen</option>
-						{$club_category}
-					</select> 
-				</td>
-			</tr>
-			<tr><td class="tcat" colspan="2" align="center"><input type="submit" name="editclub" value="Club editieren" id="submit" class="button"></td></tr>
-		</table>
-</form>
-		</td>
+					<tr>
+						<td class="trow1" width="50%">
+				<strong>{$lang->clubandsociety_addcat}</strong>
+			</td>
+	
+			<td class="trow2" width="50%">
+				<select name="clubcat">
+{$club_cat}
+				</select>
+			</td>
 		</tr>
-</table>
-</td>
-</tr>
-</table>
-{$footer}
-</body>
-</html>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
+				{$clubadmin_option}
+		<tr><td class="trow1" colspan="2">	<strong>{$lang->clubandsociety_adddesc}</strong></td><tr/>
+		<tr>
+			<td class="trow2" colspan="2"><textarea class="textarea" name="clubdesc" id="clubdesc" rows="5" cols="30" style="width:99%;" placeholder="Beschreibe hier den Club/Verein. Was macht ihn aus, wo liegt er und von wem wird er geführt?"></textarea></td></tr>
+		<tr><td colspan="2" class="trow1" align="center"><input type="submit" name="add_clubsociety" id="add" class="button" value="{$lang->clubandsociety_addsubmit}"></td></tr>
+	</table>
+</form>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
     );
     $db->insert_query("templates", $insert_array);
 
     $insert_array = array(
-        'title'        => 'clubadministration_modcp',
-        'template'    => $db->escape_string('<html>
+        'title' => 'clubadministration_bit',
+        'template' => $db->escape_string('<div class="club_body">
+	<div class="thead">
+		<strong>{$club[\'club_name\']}</strong>
+		<div class="smalltext">{$club[\'club_type\']}<br />
+			{$club_leader}
+		</div></div>
+		<div class="club_desc">
+			{$club_desc}
+		</div>
+	<div class="tcat"><strong>{$lang->clubandsociety_overview_member}</strong></div>
+	{$club_join}
+	{$club_bit_member}
+	</div>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_bit_clubmembers',
+        'template' => $db->escape_string('<div>{$club_members} {$club_leave}</div>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_category',
+        'template' => $db->escape_string('<div id="{$club_overview_cat}" class="tabcontent"><strong>{$club_overview_cat}</strong>
+	<div class="club_flex">
+      {$club_bit}
+	</div></div>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_club_options',
+        'template' => $db->escape_string('<div>
+	<a href="{$options_path}&delete={$club_id}">{$lang->clubandsociety_delete}</a> | <a onclick="$(\'#editclub_{$club_id}\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \'undefined\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">{$lang->clubandsociety_edit}</a><div class="modal" id="editclub_{$club_id}" style="display: none;">{$edit_clubsociety}</div>
+</div>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_edit',
+        'template' => $db->escape_string('<form id="edit_clubsociety"  method="post"  action="{$options_path}">
+	<input type="hidden" value="{$club_id}" name="club_id">
+	<input type="hidden" value="{$clubs[\'club_creator\']}" name="club_creator">
+	<table cellspacing="2" cellpadding="5" style="margin: auto;">
+		<tr><td class="tcat" colspan="2"><strong>{$lang->clubandsociety_add}</strong></td></tr>
+		<tr>
+			<td class="trow1" width="50%">
+				<strong>{$lang->clubandsociety_addtitle}</strong>
+			</td>
+			<td class="trow2" width="50%"><input type="text" class="textbox" value="{$club_name}" name="clubname" style="width: 200px;">
+			</td>	</tr>
+			<tr>
+						<td class="trow1" width="50%">
+				<strong>{$lang->clubandsociety_addtype}</strong>
+			</td>
+	
+			<td class="trow2" width="50%">
+				<select name="clubtype">
+					{$type_option}
+				</select>
+			</td>
+		</tr>
+					<tr>
+						<td class="trow1" width="50%">
+				<strong>{$lang->clubandsociety_addcat}</strong>
+			</td>
+	
+			<td class="trow2" width="50%">
+				<select name="clubcat">
+			{$cat_option}
+				</select>
+			</td>
+		</tr>
+				{$clubadmin_option}
+		<tr><td class="trow1" colspan="2">	<strong>{$lang->clubandsociety_adddesc}</strong></td><tr/>
+		<tr>
+			<td class="trow2" colspan="2"><textarea class="textarea" name="clubdesc" id="clubdesc" rows="5" cols="30" style="width:99%;" placeholder="Beschreibe hier den Club/Verein. Was macht ihn aus, wo liegt er und von wem wird er geführt?">{$clubs[\'club_description\']}</textarea></td></tr>
+		<tr><td colspan="2" class="trow1" align="center"><input type="submit" name="edit_clubsociety" id="add" class="button" value="{$lang->clubandsociety_editsubmit}"></td></tr>
+	</table>
+</form>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_modcp',
+        'template' => $db->escape_string('<html>
 <head>
-	<title>{$mybb->settings[\'bbname\']} - {$lang->club_modcp}</title>
+	<title>{$mybb->settings[\'bbname\']} - {$lang->clubandsociety_modcp}</title>
 {$headerinclude}
 </head>
 <body>
@@ -330,110 +315,230 @@ Aktuell sind {$count} offene Clubs vorhanden. </a>
 		<tr>
 			{$modcp_nav}
 			<td valign="top">
-					<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
+				<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
 					<tr>
-						<td class="thead"><h1>{$lang->club_modcp}</h1></td>
-					</tr>
-						<tr><td class="tcat"><h2>{$lang->club_new}</h2></td></tr>
-						<tr><td>
-							<table width="100%">
-							<tr><td class="tcat"><h2>{$lang->club_name}</h2></td>
-	<td class="tcat"><h2>{$lang->club_desc}</h2></td>
-	<td class="tcat"><h2>{$lang->club_cat}</h2></td>
-									<td class="tcat"><h2>{$lang->club_option}</h2></td></tr>
-								{$modcp_club_bit}
-							</table>
-							</td></tr>
-												<tr><td class="tcat"><h2>{$lang->club_all}</h2></td></tr>
-						<tr><td>
-							<table width="100%">
-							<tr><td class="tcat"><h2>{$lang->club_creator}</h2></td>
-								<td class="tcat"><h2>{$lang->club_name}</h2></td>
-	<td class="tcat"><h2>{$lang->club_desc}</h2></td>
-	<td class="tcat"><h2>{$lang->club_cat}</h2></td>
-									<td class="tcat"><h2>{$lang->club_options}</h2></td></tr>
-								{$modcp_club_all}
-							</table>
-							</td></tr>
-				</table>
+						<td class="thead"><strong>{$lang->clubandsociety_modcp}</strong></td></tr>
+<tr><td class="trow1">
+	<div class="club_flex">
+		{$club_modcp_bit}
+	</div>	</td></tr>
+					</table>
 			</td>
 		</tr>
 	</table>
 {$footer}
 </body>
 </html>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
     );
     $db->insert_query("templates", $insert_array);
 
     $insert_array = array(
-        'title'        => 'clubadministration_modcp_check',
-        'template'    => $db->escape_string('<tr>
-	<td class="trow1">{$club_name}</td>
-		<td class="trow1">{$club_desc}</td>
-		<td class="trow1">{$club_cat}</td>
-		<td class="trow1">{$club_ok} # {$club_no}
+        'title' => 'clubadministration_modcp_bit',
+        'template' => $db->escape_string('<div class="club_body">
+	<div class="thead">
+		<strong>{$club_name}</strong>
+		<div class="smalltext">{$club_type} | {$club_cat}<br />
+			{$club_creator}
+		</div></div>
+		<div class="club_desc">
+			{$club_desc}
+		</div>
+{$club_options}
+	</div>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_modcp_control',
+        'template' => $db->escape_string('<html>
+<head>
+	<title>{$mybb->settings[\'bbname\']} - {$lang->clubandsociety_modcp_control}</title>
+{$headerinclude}
+</head>
+<body>
+	{$header}
+	<table width="100%" border="0" align="center">
+		<tr>
+			{$modcp_nav}
+			<td valign="top">
+				<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
+					<tr>
+						<td class="thead"><strong>{$lang->clubandsociety_modcp_control}</strong></td></tr>
+<tr><td class="trow1">
+	<div class="club_flex">
+		{$club_modcp_bit}
+	</div>	</td></tr>
+					</table>
 			</td>
-</tr>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
+		</tr>
+	</table>
+{$footer}
+</body>
+</html>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
     );
     $db->insert_query("templates", $insert_array);
 
     $insert_array = array(
-        'title'        => 'clubadministration_modcp_clubadmin_nav',
-        'template'    => $db->escape_string('<tr><td class="trow1 smalltext"><a href="modcp.php?action=clubadministration" class="modcp_nav_item modcp_nav_banning">Clubs Verwalten</a></td></tr>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
+        'title' => 'clubadministration_new_options',
+        'template' => $db->escape_string('<div>
+	<a href="modcp.php?action=clubandsocietymodcp_control&accept={$club_id}">{$lang->clubandsociety_modcp_accept}</a> | 	<a href="modcp.php?action=clubandsocietymodcp_control&decline={$club_id}">{$lang->clubandsociety_modcp_decline}</a>
+</div>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
     );
     $db->insert_query("templates", $insert_array);
 
     $insert_array = array(
-        'title'        => 'clubadministration_modcp_all',
-        'template'    => $db->escape_string('<tr>
-	<td class="trow1" align="center">{$user}</td>
-	<td class="trow1" align="center">{$club_name}</td>
-		<td class="trow1" align="justify">{$club_desc}</td>
-		<td class="trow1" align="center">{$club_cat}</td>
-		<td class="trow1" align="center">{$club_edit} # {$club_delete}
-			</td>
-</tr>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title'        => 'clubadministration_profile',
-        'template'    => $db->escape_string('<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder tfixed">
-	<colgroup>
-	<col style="width: 30%;" />
-	</colgroup>
-	<tr>
-		<td class="thead"><strong>{$lang->club_memprofile}</strong></td>
-	</tr>
-	{$club_memprofile_bit}
+        'title' => 'clubadministration_usercp',
+        'template' => $db->escape_string('<html>
+<head>
+<title>{$lang->user_cp} - {$lang->clubandsociety_ucp}</title>
+{$headerinclude}
+</head>
+<body>
+{$header}
+<table width="100%" border="0" align="center">
+<tr>
+{$usercpnav}
+<td valign="top">
+<table border="0" cellspacing="{$theme[\'borderwidth\']}" cellpadding="{$theme[\'tablespace\']}" class="tborder">
+<tr>
+<td class="thead"><strong>{$lang->clubandsociety_ucp}</strong></td>
+</tr>
+<tr><td class="trow1">
+		<div class="club_flex">
+		{$club_usercp_bit}
+	</div>	
+	</td></tr>
 </table>
-<br />'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
+{$footer}
+</body>
+</html>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
     );
     $db->insert_query("templates", $insert_array);
 
     $insert_array = array(
-        'title'        => 'clubadministration_profile_bit',
-        'template'    => $db->escape_string('<tr><td class="trow1">{$clubtitle} {$club_leader}</td></tr>'),
-        'sid'        => '-1',
-        'version'    => '',
-        'dateline'    => TIME_NOW
+        'title' => 'clubadministration_usercp_bit',
+        'template' => $db->escape_string('<div class="club_body">
+	<div class="thead">
+		<strong>{$club_name}</strong>
+		<div class="smalltext">{$club_type} | {$club_cat}<br />
+		</div></div>
+		<div class="club_desc">
+			{$club_desc}
+		</div>
+{$club_options}
+	</div>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
     );
     $db->insert_query("templates", $insert_array);
+
+    //CSS einfügen
+    $css = array(
+        'name' => 'clubadministration.css',
+        'tid' => 1,
+        'attachedto' => '',
+        "stylesheet" =>    ' .club_flex{
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+
+}
+
+ /* Style the tab */
+.club_tab {
+  overflow: hidden;
+  border: 1px solid #ccc;
+  background-color: #f1f1f1;	
+	width: 160px;
+	text-align: center;
+	display: flex;
+flex-wrap: wrap;
+justify-content: center;
+}
+
+/* Style the buttons that are used to open the tab content */
+.club_tab button {
+  background: inherit;
+  float: left;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  padding: 14px 16px;
+  transition: 0.3s;
+	width: 150px;
+	border: none;
+}
+
+/* Change background color of buttons on hover */
+.club_tab button:hover {
+  background-color: #ddd;
+}
+
+/* Create an active/current tablink class */
+.club_tab button.active {
+  background-color: #ccc;
+		width: 150px;
+}
+
+/* Style the tab content */
+.tabcontent {
+  display: none;
+  padding: 6px 12px;
+	box-sizing: border-box;
+	width: 85%;
+} 
+
+.club_addclub{
+	text-align: center;
+	text-transform: uppercase;
+	padding: 4px;
+color: #0072BC;
+}
+
+.club_body{
+	width: 23%;
+	margin: 5px 8px;
+}
+
+.club_desc{
+	margin: 5px;
+	height: 120px;
+	overflow: auto;
+	scrollbar-width: none !important;
+	font-size: 12px;
+	text-align: justify;
+}  ',
+        'cachefile' => $db->escape_string(str_replace('/', '', 'clubadministration.css')),
+        'lastmodified' => time()
+    );
+
+    require_once MYBB_ADMIN_DIR . "inc/functions_themes.php";
+
+    $sid = $db->insert_query("themestylesheets", $css);
+    $db->update_query("themestylesheets", array("cachefile" => "css.php?stylesheet=" . $sid), "sid = '" . $sid . "'", 1);
+
+    $tids = $db->simple_select("themes", "tid");
+    while ($theme = $db->fetch_array($tids)) {
+        update_theme_stylesheet_list($theme['tid']);
+    }
+// Don't forget this!
+    rebuild_settings();
 }
 
 function clubadministration_is_installed()
@@ -471,27 +576,79 @@ function clubadministration_uninstall()
     $cache->update_usergroups();
     $db->query("DELETE FROM ".TABLE_PREFIX."settinggroups WHERE name='clubadministrationsettings'");
     $db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='club_category'");
-
+    $db->query("DELETE FROM ".TABLE_PREFIX."settings WHERE name='club_admin'");
     $db->delete_query("templates", "title LIKE '%clubadministration%'");
+    require_once MYBB_ADMIN_DIR."inc/functions_themes.php";
+    $db->delete_query("themestylesheets", "name = 'clubadministration.css'");
+    $query = $db->simple_select("themes", "tid");
+    while($theme = $db->fetch_array($query)) {
+        update_theme_stylesheet_list($theme['tid']);
+    }
     rebuild_settings();
 
 }
 
 function clubadministration_activate()
 {
-    global $db;
+    global $db, $cache;
+    //Alertseinstellungen
+    if(class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+        $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::getInstance();
+
+        if (!$alertTypeManager) {
+            $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
+        }
+
+
+        // Dein Club wurde angenommen
+
+        $alertType = new MybbStuff_MyAlerts_Entity_AlertType();
+        $alertType->setCode('clubandsociety_accepted'); // The codename for your alert type. Can be any unique string.
+        $alertType->setEnabled(true);
+        $alertType->setCanBeUserDisabled(true);
+
+        $alertTypeManager->add($alertType);
+
+        // Dein Club wurde abgelehnt
+
+        $alertType = new MybbStuff_MyAlerts_Entity_AlertType();
+        $alertType->setCode('clubandsociety_rejected'); // The codename for your alert type. Can be any unique string.
+        $alertType->setEnabled(true);
+        $alertType->setCanBeUserDisabled(true);
+
+        $alertTypeManager->add($alertType);
+    }
+
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
-    find_replace_templatesets("header", "#".preg_quote('<navigation>')."#i", '{$clubadministration_alert} <navigation>');
-    find_replace_templatesets("modcp_nav", "#".preg_quote('{$modcp_nav_users}')."#i", '{$modcp_nav_users}{$clubadmin_modcp}');
-    find_replace_templatesets("member_profile", "#".preg_quote('{$profilefields}')."#i", '{$profilefields}{$club_memprofile}');
+
+
 }
 
 function clubadministration_deactivate()
 {
+    global $db, $cache;
+
+    if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+        $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::getInstance();
+
+        if (!$alertTypeManager) {
+            $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
+        }
+
+        $alertTypeManager->deleteByCode('clubandsociety_accepted');
+    }
+
+    if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+        $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::getInstance();
+
+        if (!$alertTypeManager) {
+            $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
+        }
+
+        $alertTypeManager->deleteByCode('clubandsociety_rejected');
+    }
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
-    find_replace_templatesets("header", "#".preg_quote('{$clubadministration_alert}')."#i", '', 0);
-    find_replace_templatesets("modcp_nav", "#".preg_quote('{$clubadmin_modcp}')."#i", '', 0);
-    find_replace_templatesets("member_profile", "#".preg_quote('{$club_memprofile}')."#i", '', 0);
+
 }
 
 // Backend Hooks
@@ -526,7 +683,8 @@ $plugins->add_hook('misc_start', 'clubadministration');
 // In the body of your plugin
 function clubadministration()
 {
-    global $mybb, $templates, $lang, $header, $headerinclude, $footer, $page, $db, $parser, $options, $club_category, $club_overview_category, $get_leader, $get_member, $member_uid;
+    global $mybb, $templates, $lang, $header, $headerinclude, $footer, $page, $db, $parser, $options, $club_category, $club_cat, $clubadmin_option, $club_leader, $club_bit, $clubmember_uid;
+    global $club_desc, $club_join, $club_members, $club_bit_member, $club_leave;
     $lang->load('clubadministration');
 
     ///der Parser halt
@@ -543,516 +701,677 @@ function clubadministration()
         "allow_videocode" => 0
     );
 
-    if($mybb->get_input('action') == 'clubs')
-    {
-        // Do something, for example I'll create a page using the hello_world_template
-
-        // Add a breadcrumb
-        add_breadcrumb('Club Übersicht', "misc.php?action=clubs");
-
-        $club_cat_setting = $mybb->settings['club_category'];
-
-        $club_cats = explode(", ", $club_cat_setting);
-        $uid = $mybb->user['uid'];
-
-        foreach ($club_cats as $club_cat){
-            $club_category .= "<option value='{$club_cat}'>{$club_cat}</option>";
-        }
-
-        //Formular Clubs hinzufügen
-        if($mybb->usergroup['canaddclub'] == 1){
-            eval("\$clubadd_formular = \"".$templates->get("clubadministration_add")."\";");
-        }
+    // Einstellungen
+    $club_category = $mybb->settings['club_category'];
+    $club_admin = $mybb->settings['club_admin'];
 
 
-        //Club in die Datenbank eintragen
-        if($_POST['addclub']){
 
-            //Wenn das Team Einträge erstellt, dann wink doch einfach durch. Sonst bitte nochmal zum Prüfung :D
-            if($mybb->usergroup['canmodcp'] == '1'){
-                $accepted = 1;
-            } else {
-                $accepted = 0;
-            }
+        if ($mybb->get_input('action') == 'clubandsociety_overview') {
+            // Do something, for example I'll create a page using the hello_world_template
 
-            $new_entry = array(
-                "club_name" => $db->escape_string($_POST['club_name']),
-                "club_description" => $db->escape_string($_POST['club_description']),
-                "club_category" => $db->escape_string($_POST['club_category']),
-                "club_creator" => (int) $mybb->user['uid'],
-                "club_adminok" => $accepted
-            );
+            // Add a breadcrumb
+            add_breadcrumb($lang->clubandsociety_title, "misc.php?action=clubandsociety_overview");
 
-            $db->insert_query("clubs", $new_entry);
-            redirect("misc.php?action=clubs");
-        }
+            if($mybb->usergroup['canaddclub'] == 1){
 
+                $club_category = explode(", ", $club_category);
+                foreach ($club_category as $club){
 
-        //Wir möchten jetzt jede Clubkategorie einzeln
-        foreach ($club_cats as $club_cat_overiew){
-            $club_bit = "";
-
-            //Clubs auslesen
-
-            $club_query = $db->query("SELECT *
-        FROM ".TABLE_PREFIX."clubs
-        WHERE club_category = '".$club_cat_overiew."'
-        AND club_adminok = 1
-    ");
-
-            while($club = $db->fetch_array($club_query)){
-                $clubid = "";
-                $clubid = $club['club_id'];
-                $club_name = $club['club_name'];
-                $club_desc = $parser->parse_message($club['club_description'], $options);
-
-                //leer machen
-                $club_member_leader = "";
-                $club_member = "";
-                //Und unsere Mitglieder, sowie die Clubführung
-                $member_query = $db->query("SELECT *
-            FROM ".TABLE_PREFIX."club_members cm
-            LEFT JOIN ".TABLE_PREFIX."users u
-            on (u.uid=cm.uid)
-            WHERE cm.club_id = '".$clubid."'
-            Order by username asc
-            ");
-
-
-                while($member = $db->fetch_array($member_query)){
-                    $get_member = "";
-                    $get_leader = "";
-                    $club_leave = "";
-                    $username = format_name($member['username'], $member['usergroup'], $member['displaygroup']);
-                    $user = build_profile_link($username, $member['uid']);
-
-                    if($mybb->user['uid'] == $member['uid']){
-                        $club_leave = "<a href='misc.php?action=clubs&leave={$clubid}&uid={$member['uid']}'><i class=\"fas fa-sign-out-alt\" title='Austreten'></i></a>";
-                    }
-
-                    if($member['club_leader'] == 1){
-                        eval("\$club_member_leader .= \"".$templates->get("clubadministration_members")."\";");
-                    }
-                    eval("\$club_member .= \"".$templates->get("clubadministration_members")."\";");
+                    $club_cat .= "<option>{$club}</option>";
                 }
-                if($mybb->usergroup['canjoinclub'] == 1){
-                    if($mybb->user['uid'] != $member['uid']){
-                        $get_leader = "<a href='misc.php?action=clubs&get_leader={$clubid}'>&raquo; Clubführung werden</a>";
-                        $get_member = "<a href='misc.php?action=clubs&get_member={$clubid}'>&raquo; Mitglied werden</a>";
+
+                if($club_admin == 1){
+                    $clubadmin_option = "	<tr>
+						<td class=\"trow1\" width='50%'>
+				<strong>{$lang->clubandsociety_addadmin}</strong>
+			</td>
+	
+			<td class=\"trow2\" width=\"50%\">
+				<select name=\"clubadmin\">
+					<option value='0'>Nein</option>
+					<option value='1'>Ja</option>
+				</select>
+			</td>
+		</tr>";
+                }
+
+                eval("\$add_clubsociety = \"" . $templates->get("clubadministration_addformular") . "\";");
+
+                if(isset($mybb->input['add_clubsociety'])){
+                    if($mybb->usergroup['canmodcp'] == 1){
+                        $admin_ok = 1;
                     } else{
-                        $get_leader = "";
-                        $get_member = "";
+                        $admin_ok = 0;
                     }
+
+                    $clubadmin = $_POST['clubadmin'];
+                    if($clubadmin == 1){
+                    $club_leader = (int)$mybb->user['uid'];
+                    } else{
+                        $club_leader = 0;
+
+                    }
+
+                    $add_clubsociety = array(
+                        "club_name" => $db->escape_string($_POST['clubname']),
+                        "club_type" => $db->escape_string($_POST['clubtype']),
+                        "club_description" => $db->escape_string($_POST['clubdesc']),
+                        "club_category" => $db->escape_string($_POST['clubcat']),
+                        "club_creator" => $mybb->user['uid'],
+                        "club_leader" => $club_leader,
+                        "club_adminok" => $admin_ok
+                    );
+
+                    $db->insert_query ("clubs", $add_clubsociety);
+
+                    redirect ("misc.php?action=clubandsociety_overview");
                 }
 
-                eval("\$club_bit .= \"".$templates->get("clubadministration_clubs")."\";");
-
             }
-            eval("\$clubs .= \"".$templates->get("clubadministration_clubs_cat")."\";");
-        }
 
 
+            // lass uns mal die Kategorien durchgehen, so dass wir alle anzeigen können!
+            foreach ($club_category as $club_overview_cat){
+                $default = "";
 
-        //Clubleader werden
-        $get_leader = $mybb->input['get_leader'];
-        $get_member = $mybb->input['get_member'];
-        $leave = $mybb->input['leave'];
-        if($get_leader){
+                // muss per Hand angepasst werden, so dass es ein Default gibt!
+                if($club_overview_cat == 'Kreativ'){
+                    $default = "id=\"defaultOpen\"";
+                }
+                $club_menu .="<button class=\"tablinks\" onclick=\"openCity(event, '{$club_overview_cat}')\"  {$default}>{$club_overview_cat}</button>";
 
-            $new_member = array(
-                "club_id" => (int)$get_leader,
-                "uid" => (int)$mybb->user['uid'],
-                "club_leader" => 1
-            );
-            $db->insert_query("club_members", $new_member);
-            redirect("misc.php?action=clubs");
-        }
-        if($get_member){
 
-            $new_member = array(
-                "club_id" => (int)$get_member,
-                "uid" => (int)$mybb->user['uid'],
-            );
-            $db->insert_query("club_members", $new_member);
-            redirect("misc.php?action=clubs");
-        }
+                $club_bit = "";
 
-        if($leave){
-            $member_uid = $mybb->user['uid'];
+                // Einmal alle Clubs auslesen, die in der aktuellen Kategorie sind!
+                $club_query = $db->query("SELECT *
+                FROM ".TABLE_PREFIX."clubs 
+                WHERE club_category  LIKE '%".$club_overview_cat."%'
+                and club_adminok  = 1
+                ORDER BY club_name ASC
+                ");
 
-            $db->delete_query("club_members", "club_id = '".$leave."' and uid ='".$member_uid."'");
-            redirect("misc.php?action=clubs");
-        }
+                while($club = $db->fetch_array($club_query)){
+                    $club_leader = "";
+                    $club_leader = "";
+                    $club_id = $club['club_id'];
+                    $club_leader_uid = $club['club_leader'];
 
-        eval("\$page = \"".$templates->get("clubadministration")."\";");
-        output_page($page);
-    }
+                    $club_desc = $parser->parse_message($club['club_description'], $options);
 
-    if($mybb->get_input('action') == 'ownclubs') {
-        // Do something, for example I'll create a page using the hello_world_template
+                    // Gib es einen club/Vereinsführer, dann zeig das doch bitte an :D und weil mit Link hübscher, lese vorher die User bitte aus
+                    if($club_admin == 1 and $club['club_leader'] != 0) {
+                        $leader_query =  $db->simple_select("users", "*", "uid=$club_leader_uid");
+                        $leader = $db->fetch_array($leader_query);
 
-        // Add a breadcrumb
-        add_breadcrumb('Eigene Clubs', "misc.php?action=ownclubs");
+                        $username = format_name($leader['username'], $leader['usergroup'], $leader['displaygroup']);
+                        $club_leader = build_profile_link($username, $leader['uid']);
+                        $club_leader = "{$lang->clubandsociety_overview_leader}".$club_leader;
+                    }
+                    if($mybb->usergroup['canjoinclub'] == 1) {
+                        $club_join = "<a href='misc.php?action=clubandsociety_overview&club_join={$club_id}'>{$lang->clubandsociety_overview_join}</a>";
+                    }
 
-        //welcher user ist online
-        $this_user = intval ($mybb->user['uid']);
+                    // Clubmitglieder auslesen
+                    $club_bit_member  = "";
+                    $clubmembers_query =  $db->query("SELECT *
+                FROM ".TABLE_PREFIX."club_members cm
+                left join ".TABLE_PREFIX."users u
+                on (cm.club_uid = u.uid)
+                WHERE club_id = '".$club_id."'
+                ORDER BY u.username ASC
+                ");
+                    while($clubmember = $db->fetch_array($clubmembers_query)){
+                        $clubmember_uid = $clubmember['club_uid'];
+                        $username = format_name($clubmember['username'], $clubmember['usergroup'], $clubmember['displaygroup']);
+                        $club_members = build_profile_link($username, $clubmember['uid']);
 
-//für den fall nicht mit hauptaccount online
-        $as_uid = intval ($mybb->user['as_uid']);
+                        /*
+                         * Wenn schon Mitglied, dann sollte die Möglichkeit, beizutreten, nicht mehr angezeigt werden. Leere somit diese Variabel und gebe stattdessen die Möglichkeit den Club/Verein zu verlassen.
+                         */
+                        if($clubmember_uid == $mybb->user['uid']){
+                            $club_join = "";
+                            $club_leave = "<a href='misc.php?action=clubandsociety_overview&club_leave={$club_id}&club_member={$clubmember_uid}'>{$lang->clubandsociety_overview_leave}</a>";
+                        }
 
-// suche alle angehangenen accounts
-        if ($as_uid == 0) {
-            $select = $db->query ("SELECT * FROM " . TABLE_PREFIX . "users WHERE (as_uid = $this_user) OR (uid = $this_user) ORDER BY username ASC");
-        } else if ($as_uid != 0) {
-//id des users holen wo alle angehangen sind
-            $select = $db->query ("SELECT * FROM " . TABLE_PREFIX . "users WHERE (as_uid = $as_uid) OR (uid = $this_user) OR (uid = $as_uid) ORDER BY username ASC");
-        }
-        while ($row = $db->fetch_array ($select)) {
-            $chara = format_name($row['username'], $row['usergroup'], $row['displaygroup']);
-            $uid = $row['uid'];
-            $club_name = "";
-            $club_desc = "";
-            $club_cat = "";
+                        eval("\$club_bit_member .= \"" . $templates->get("clubadministration_bit_clubmembers") . "\";");
+                    }
 
-            $club_own_bit = "";
 
-            //Clubs auslesen
-            $club_select = $db->query("SELECT *
-            from ".TABLE_PREFIX."clubs
-            where club_creator = '".$uid."'
-            order by club_name ASC
-            ");
-
-            while($club = $db->fetch_array($club_select)){
-                $club_edit = "<a href='misc.php?action=ownclubs_edit&club={$club['club_id']}'>&raquo; Bearbeiten</a>";
-
-                $club_name = $club['club_name'];
-                $club_desc = $parser->parse_message($club['club_description'], $options);
-                $club_cat = $club['club_category'];
-
-                eval("\$club_own_bit .= \"".$templates->get("clubadministration_ownclubs_bit")."\";");
+                    eval("\$club_bit .= \"" . $templates->get("clubadministration_bit") . "\";");
+                }
+                eval("\$club_overview .= \"" . $templates->get("clubadministration_category") . "\";");
             }
-            eval("\$club_bit_own .= \"".$templates->get("clubadministration_bit_ownclubs")."\";");
-        }
 
+            // Club Beitreten
+            $club_join = $mybb->input['club_join'];
+            if($club_join){
+                $join_club_array = array(
+                    "club_id" => (int)$club_join,
+                    "club_uid" => (int)$mybb->user['uid']
+                );
 
-        eval("\$page = \"".$templates->get("clubadministration_ownclubs")."\";");
-        output_page($page);
-    }
-
-    if($mybb->get_input('action') == 'ownclubs_edit') {
-        // Do something, for example I'll create a page using the hello_world_template
-
-        // Add a breadcrumb
-        add_breadcrumb('Club editieren', "misc.php?action=ownclubs_edit");
-        $club_id = $mybb->input['club'];
-
-        //Clubs auslesen
-        $club_select = $db->query("SELECT *
-            from " . TABLE_PREFIX . "clubs
-            where club_id = '" . $club_id . "'
-            ");
-
-        $club = $db->fetch_array($club_select);
-        $club_cat_setting = $mybb->settings['club_category'];
-        $club_name = $club['club_name'];
-        $club_desc = $club['club_description'];
-        $club_cat = $club['club_category'];
-        $club_cats = explode(", ", $club_cat_setting);
-
-        foreach ($club_cats as $club_cat){
-            if($club_cat == $club_cat){
-                $select = "selected=\"selected\"";
-            } else {
-                $select = "";
+                $db->insert_query ("club_members", $join_club_array);
+                redirect ("misc.php?action=clubandsociety_overview");
             }
-            $club_category .= "<option value='{$club_cat}' {$select}>{$club_cat}</option>";
+
+            // Club verlassen
+
+            $club_leave = $mybb->input['club_leave'];
+            if($club_leave){
+                $clubmember = $mybb->input['club_member'];
+                $db->delete_query("club_members", "club_id ='$club_leave' and club_uid = '$clubmember'");
+                redirect ("misc.php?action=clubandsociety_overview");
+            }
+
+
+            eval("\$page = \"" . $templates->get("clubadministration") . "\";");
+            output_page($page);
         }
-
-
-        //Club in die Datenbank eintragen
-        if($_POST['editclub']){
-            $club_id = $mybb->input['club'];
-            $new_entry = array(
-                "club_name" => $db->escape_string($mybb->input['club_name']),
-                "club_description" => $db->escape_string($mybb->input['club_description']),
-                "club_category" => $db->escape_string($mybb->input['club_category']),
-            );
-
-            $db->update_query("clubs", $new_entry, "club_id = '".$club_id."'");
-            redirect("misc.php?action=ownclubs");
-        }
-
-        eval("\$page = \"" . $templates->get("clubadministration_ownclubs_edit") . "\";");
-        output_page($page);
     }
-}
 
-/*
- * Clubs im Profil ausgeben
- */
-$plugins->add_hook('member_profile_end', 'profile_clubadministration');
 
-function profile_clubadministration(){
-    global $mybb, $memprofile, $db, $templates, $club_memprofile, $lang, $theme, $clubtitle;
-    $lang->load('clubadministration');
 
-    $memuid = $memprofile['uid'];
-    $lang->load('clubadministration');
-    $club_query = $db->query("SELECT *
-        FROM ".TABLE_PREFIX."club_members cm
-        INNER JOIN ".TABLE_PREFIX."clubs c
-        USING (club_id)
-        where cm.uid = '".$memuid."'
-        ");
-
-    while($row = $db->fetch_array($club_query)){
-        $clubtitle = "";
-        $club_leader = "";
-        $clubtitle = $row['club_name'];
-
-        if($row['club_leader']  == 1){
-            $club_leader = "<b>&raquo; {$lang->club_leader}</b>";
-        }
-        eval("\$club_memprofile_bit .= \"" . $templates->get("clubadministration_profile_bit") . "\";");
-    }
-    eval("\$club_memprofile .= \"" . $templates->get("clubadministration_profile") . "\";");
-
-}
-
+    // mod cp navigation
 $plugins->add_hook("modcp_nav", "clubadministration_modcp_nav");
-
-
 function clubadministration_modcp_nav(){
-    global $clubadmin_modcp, $templates;
-
-    eval("\$clubadmin_modcp = \"" . $templates->get("clubadministration_modcp_clubadmin_nav") . "\";");
+    global $clubadmin_nav, $lang;
+    //Die Sprachdatei
+    $lang->load('clubadministration');
+    $clubadmin_nav = "<tr><td class=\"trow1 smalltext\"><a href=\"modcp.php?action=clubandsocietymodcp\" class=\"modcp_nav_item modcp_nav_modlogs\">{$lang->clubandsociety_modcp_nav}</a></td></tr>
+                       <tr><td class=\"trow1 smalltext\"><a href=\"modcp.php?action=clubandsocietymodcp_control\" class=\"modcp_nav_item modcp_nav_modlogs\">{$lang->clubandsociety_modcp_nav_control}</a></td></tr>";
 }
 
-/*
- * Hier kannst du die Orte bearbeiten
- */
+// hier ist dann mal das Mod CP
 $plugins->add_hook("modcp_start", "clubadministration_modcp");
 function clubadministration_modcp()
 {
-
-    global $mybb, $templates, $lang, $header, $headerinclude, $footer, $application, $db, $page,$modcp_nav, $club_ok, $club_no, $club_edit, $club_delete, $club_category;
-    require_once MYBB_ROOT . "inc/datahandlers/pm.php";
-    $pmhandler = new PMDataHandler();
-    require_once MYBB_ROOT . "inc/class_parser.php";;
-    $parser = new postParser;
+    global $mybb, $templates, $lang, $header, $headerinclude, $footer, $modcp_nav, $db, $page, $club_modcp_bit, $options_path,$type_option,$cat_option;
+    //Die Sprachdatei
     $lang->load('clubadministration');
 
-    if ($mybb->get_input('action') == 'clubadministration') {
+    require_once MYBB_ROOT . "inc/class_parser.php";;
+    $parser = new postParser;
+    $options = array(
+        "allow_html" => 1,
+        "allow_mycode" => 1,
+        "allow_smilies" => 1,
+        "allow_imgcode" => 1,
+        "filter_badwords" => 0,
+        "nl2br" => 1,
+        "allow_videocode" => 0
+    );
+    $club_admin = $mybb->settings['club_admin'];
+
+    if ($mybb->get_input('action') == 'clubandsocietymodcp') {
         // Do something, for example I'll create a page using the hello_world_template
 
         // Add a breadcrumb
-        add_breadcrumb('Clubverwaltung', "modcp.php?action=clubadministration");
-        $options = array(
-            "allow_html" => 1,
-            "allow_mycode" => 1,
-            "allow_smilies" => 1,
-            "allow_imgcode" => 1,
-            "filter_badwords" => 0,
-            "nl2br" => 1,
-            "allow_videocode" => 0
+        add_breadcrumb($lang->clubandsociety_modcp, "modcp.php?action=clubandsocietymodcp");
+
+        // Einstellungen
+        $club_category = $mybb->settings['club_category'];
+        $club_category = explode(", ", $club_category);
+
+        $type_array = array(
+            "Club" => "Club",
+            "Verein" => "Verein",
         );
 
-        $select = $db->query("SELECT *
+        $club_query = $db->query("SELECT *
         FROM ".TABLE_PREFIX."clubs c
-        LEFT JOIN ".TABLE_PREFIX."users u
-        on (c.club_creator = u.uid)
-        WHERE club_adminok = 0
-        ORDER BY club_name ASC
-        ");
+        LEFT JOIN ".TABLE_PREFIX."users u  on (c.club_creator = u.uid)
+        where c.club_adminok  = 1
+          order by c.club_name ASC
+                ");
 
-        while($club = $db->fetch_array($select)){
+
+        while($clubs = $db->fetch_array($club_query)){
             $club_name = "";
+            $club_type = "";
             $club_desc = "";
+            $club_creator = "";
             $club_cat = "";
+            $club_id = "";
+            $type_option = "";
+            $cat_option = "";
 
-            $username = format_name($club['username'], $club['usergroup'], $club['displaygroup']);
-            $user = build_profile_link($username, $club['uid']);
-            $uid = $club['uid'];
-            $club_name = $club['club_name'];
-            $club_desc = $parser->parse_message($club['club_description'], $options);
-            $club_cat = $club['club_category'];
-            $club_id = $club['club_id'];
+            // lass uns die Variabeln mal füllen
+            $club_id = $clubs['club_id'];
+            $club_name = $clubs['club_name'];
+            $club_type = $clubs['club_type'];
+            $club_cat = $clubs['club_category'];
+            $username = format_name($clubs['username'], $clubs['usergroup'], $clubs['displaygroup']);
+            $club_creator = "{$lang->clubandsociety_modcp_creator}".build_profile_link($username, $clubs['uid']);
+            $club_desc = $parser->parse_message($clubs['club_description'], $options);
 
-            //Annehmen oder Ablehnen?
-            $club_ok = "<a href='modcp.php?action=clubadministration&clubok={$club_id}'>annehmen</a>";
-            $club_no = "<a href='modcp.php?action=clubadministration&clubno={$club_id}'>ablehnen</a>";
-            eval("\$modcp_club_bit .= \"".$templates->get("clubadministration_modcp_check")."\";");
-        }
-
-        $club_ok = $mybb->input['clubok'];
-        $team = $mybb->user['uid'];
-
-        if($club_ok){
-
-            $pm_change = array(
-                "subject" => "{$lang->club_ok}",
-                "message" => "{$lang->club_ok_text}",
-                //to: wer muss die anfrage bestätigen
-                "fromid" => $uid,
-                //from: wer hat die anfrage gestellt
-                "toid" => $team
-            );
-            // $pmhandler->admin_override = true;
-            $pmhandler->set_data ($pm_change);
-            if (!$pmhandler->validate_pm ())
-                return false;
-            else {
-                $pmhandler->insert_pm ();
+            // Edit optionen
+            if($club_admin == 1) {
+                $clubadmin_option = "				<tr>
+						<td class='trow1' width='50%'>
+				<strong>{$lang->clubandsociety_edit_leader}</strong>
+			</td>
+	
+			<td class='trow2' width='50%'><input type='text' class='textbox' value='{$clubs['club_leader']}' name='club_leader' style='width: 200px;'></td></tr>";
             }
-            $db->query("UPDATE ".TABLE_PREFIX."clubs SET club_adminok = 1 where club_id = '".$club_ok."'");
-            redirect("modcp.php?action=clubadministration");
-        }
-
-        $club_no= $mybb->input['clubno'];
-        if($club_no){
-
-            $pm_change = array(
-                "subject" => "{$lang->club_no}",
-                "message" => "{$lang->club_no_text}",
-                //to: wer muss die anfrage bestätigen
-                "fromid" => $uid,
-                //from: wer hat die anfrage gestellt
-                "toid" => $team
-            );
-            // $pmhandler->admin_override = true;
-            $pmhandler->set_data ($pm_change);
-            if (!$pmhandler->validate_pm ())
-                return false;
-            else {
-                $pmhandler->insert_pm ();
+            foreach ($type_array as $type){
+                $select = "";
+                if($club_type == $type){
+                    $select = "selected";
+                }
+                $type_option .= "<option value='{$type}' {$select}>{$type}</option>";
             }
-            redirect("modcp.php?action=clubadministration");
+
+            foreach ($club_category as $cat){
+                $select = "";
+                if($club_cat == $cat){
+                    $select = "selected";
+                }
+                $cat_option .= "<option value='{$cat}' {$select}>{$cat}</option>";
+            }
+
+            $options_path = "modcp.php?action=clubandsocietymodcp";
+            eval("\$edit_clubsociety = \"" . $templates->get("clubadministration_edit") . "\";");
+            eval("\$club_options = \"" . $templates->get("clubadministration_club_options") . "\";");
+            eval("\$club_modcp_bit .= \"" . $templates->get("clubadministration_modcp_bit") . "\";");
+            }
+
+
+            // Editieren wir mal
+        if(isset($mybb->input['edit_clubsociety'])){
+
+            $club_id = $mybb->input['club_id'];
+
+            $edit_clubsociety = array(
+                "club_name" => $db->escape_string($mybb->input['clubname']),
+                "club_type" => $db->escape_string($mybb->input['clubtype']),
+                "club_description" => $db->escape_string($mybb->input['clubdesc']),
+                "club_category" => $db->escape_string($mybb->input['clubcat']),
+                "club_creator" => (int)$mybb->input['club_creator'],
+                "club_leader" => (int)$mybb->input['club_leader'],
+                "club_adminok" => 1
+            );
+
+            $db->update_query ("clubs", $edit_clubsociety, "club_id = '{$club_id}'");
+
+            redirect ("modcp.php?action=clubandsocietymodcp");
         }
 
-
-        //Alle Clubs auflisten
-        $club_select = $db->query("SELECT *
-        FROM ".TABLE_PREFIX."clubs c
-        LEFT JOIN ".TABLE_PREFIX."users u
-        on (c.club_creator = u.uid)
-        WHERE club_adminok = 1
-        ");
-
-        while($club = $db->fetch_array($club_select)){
-            $club_name = "";
-            $club_desc = "";
-            $club_cat = "";
-
-            $username = format_name($club['username'], $club['usergroup'], $club['displaygroup']);
-            $user = build_profile_link($username, $club['uid']);
-            $uid = $club['uid'];
-            $club_name = $club['club_name'];
-            $club_desc = $parser->parse_message($club['club_description'], $options);
-            $club_cat = $club['club_category'];
-            $club_id = $club['club_id'];
-            echo($club_id);
-            //Club editieren oder Löschen
-            $club_edit = "<a href='modcp.php?action=clubadministration_edit&clubedit={$club_id}'>editieren</a>";
-            $club_delete = "<a href='modcp.php?action=clubadministration&clubdelete={$club_id}'>löschen</a>";
-            eval("\$modcp_club_all .= \"".$templates->get("clubadministration_modcp_all")."\";");
+        // Clubs löschen
+        $delete_club = $mybb->input['delete'];
+        if($delete_club){
+            $db->delete_query("clubs", "club_id='{$delete_club}'");
+            redirect ("modcp.php?action=clubandsocietymodcp");
         }
 
-//Club löschen
-        $club_delete = $mybb->input['clubdelete'];
-        if($club_delete){
-            $db->delete_query("clubs",  "club_id = '".$club_delete."'");
-            redirect("modcp.php?action=clubadministration");
-        }
-
-
-        eval("\$page = \"" . $templates->get("clubadministration_modcp") . "\";");
+        eval("\$page = \"".$templates->get("clubadministration_modcp")."\";");
         output_page($page);
     }
-    if ($mybb->get_input('action') == 'clubadministration_edit') {
 
+
+    // neue Clubs/Vereine verwalten
+    if ($mybb->get_input('action') == 'clubandsocietymodcp_control') {
+        // Do something, for example I'll create a page using the hello_world_template
 
         // Add a breadcrumb
-        add_breadcrumb('Club Editieren', "modcp.php?action=clubadministration_edit");
-        $club_id = $mybb->input['clubedit'];
+        add_breadcrumb($lang->clubandsociety_modcp_control, "modcp.php?action=clubandsocietymodcp_control");
 
-        //Clubs auslesen
-        $club_select = $db->query("SELECT *
-            from " . TABLE_PREFIX . "clubs
-            where club_id = '" . $club_id . "'
-            ");
+        $club_query = $db->query("SELECT *
+        FROM ".TABLE_PREFIX."clubs c
+        LEFT JOIN ".TABLE_PREFIX."users u  
+        on (c.club_creator = u.uid)
+        where c.club_adminok  = 0
+          order by c.club_name ASC
+                ");
 
-        $club = $db->fetch_array($club_select);
-        $club_cat_setting = $mybb->settings['club_category'];
-        $club_name = $club['club_name'];
-        $club_desc = $club['club_description'];
-        $club_category = $club['club_category'];
-        $club_creator = $club['club_creator'];
 
-        $club_cats = explode(", ", $club_cat_setting);
-        $club_cat_setting = $mybb->settings['club_category'];
+        while($clubs = $db->fetch_array($club_query)){
+            $club_name = "";
+            $club_type = "";
+            $club_desc = "";
+            $club_creator = "";
+            $club_cat = "";
+            $club_id = "";
+            $type_option = "";
+            $cat_option = "";
 
-        $club_cats = explode(", ", $club_cat_setting);
-        foreach ($club_cats as $club_cat){
-            if($club_cat == $club_category){
-                $select = "selected=\"selected\"";
-            } else {
-                $select = "";
-            }
-            $club_category .= "<option value='{$club_cat}' {$select}>{$club_cat}</option>";
+            // lass uns die Variabeln mal füllen
+            $club_id = $clubs['club_id'];
+            $club_name = $clubs['club_name'];
+            $club_type = $clubs['club_type'];
+            $club_cat = $clubs['club_category'];
+            $username = format_name($clubs['username'], $clubs['usergroup'], $clubs['displaygroup']);
+            $club_creator = "{$lang->clubandsociety_modcp_creator}".build_profile_link($username, $clubs['uid']);
+            $club_desc = $parser->parse_message($clubs['club_description'], $options);
+
+
+            eval("\$club_options = \"" . $templates->get("clubadministration_new_options") . "\";");
+            eval("\$club_modcp_bit .= \"" . $templates->get("clubadministration_modcp_bit") . "\";");
         }
 
+        $accept_club = $mybb->input['accept'];
+        if($accept_club){
 
-        //Club in die Datenbank eintragen
-        if($_POST['editclub']){
-            $club_id = $mybb->input['club'];
-            $new_entry = array(
-                "club_creator" => (int) $mybb->input['club_name'],
-                "club_name" => $db->escape_string($mybb->input['club_name']),
-                "club_description" => $db->escape_string($mybb->input['club_description']),
-                "club_category" => $db->escape_string($mybb->input['club_category']),
+            $accept_clubsociety = array(
+                "club_adminok" => 1
             );
 
-            $db->update_query("clubs", $new_entry, "club_id = '".$club_id."'");
-            redirect("mmodcp.php?action=clubadministration_edit");
+            $club_infos = $db->simple_select("clubs", "*", "club_id = '{$accept_club}'");
+            $club_info = $db->fetch_array($club_infos);
+
+            $club_name = $club_info['club_name'];
+            $club_creator = $club_info['club_creator'];
+            $club_type = $club_info['club_type'];
+
+            if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+
+                $alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('clubandsociety_accepted');
+                if ($alertType != NULL && $alertType->getEnabled() and $club_creator != $mybb->user['uid']) {
+                    $alert = new MybbStuff_MyAlerts_Entity_Alert((int)$club_creator, $alertType, $club_name, $club_type);
+                    $alert->setExtraDetails([
+                        'club' => $club_name,
+                        'type' => $club_type
+                    ]);
+                    MybbStuff_MyAlerts_AlertManager::getInstance()->addAlert($alert);
+                }
+            }
+
+            $db->update_query ("clubs", $accept_clubsociety, "club_id = '{$accept_club}'");
+            redirect ("modcp.php?action=clubandsocietymodcp_control");
         }
 
+        // Clubs löschen
+        $delete_club = $mybb->input['decline'];
+        if($delete_club){
+            $club_infos = $db->simple_select("clubs", "*", "club_id = '{$delete_club}'");
+            $club_info = $db->fetch_array($club_infos);
 
-        eval("\$page = \"" . $templates->get("clubadministration_modcp_edit") . "\";");
+            $club_name = $club_info['club_name'];
+            $club_creator = $club_info['club_creator'];
+            $club_type = $club_info['club_type'];
+
+            if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
+
+                $alertType = MybbStuff_MyAlerts_AlertTypeManager::getInstance()->getByCode('clubandsociety_rejected');
+                if ($alertType != NULL && $alertType->getEnabled() and $club_creator != $mybb->user['uid']) {
+                    $alert = new MybbStuff_MyAlerts_Entity_Alert((int)$club_creator, $alertType, $club_name, $club_type);
+                    $alert->setExtraDetails([
+                        'club' => $club_name,
+                        'type' => $club_type
+                    ]);
+                    MybbStuff_MyAlerts_AlertManager::getInstance()->addAlert($alert);
+                }
+            }
+
+            $db->delete_query("clubs", "club_id='{$delete_club}'");
+            redirect ("modcp.php?action=clubandsocietymodcp_control");
+        }
+
+        eval("\$page = \"".$templates->get("clubadministration_modcp_control")."\";");
         output_page($page);
     }
+
+}
+
+$plugins->add_hook("usercp_menu_built", "clubadministration_usercp_nav");
+function clubadministration_usercp_nav(){
+    global $clubadmin_ucp_nav, $lang;
+    //Die Sprachdatei
+    $lang->load('clubadministration');
+    $clubadmin_ucp_nav = "<tr><td class=\"trow1 smalltext\"><a href=\"usercp.php?action=ownclubandsociety\" class=\"modcp_nav_item modcp_nav_modlogs\">{$lang->clubandsociety_ucp_nav}</a></td></tr>";
 }
 
 
-$plugins->add_hook('global_intermediate', 'global_clubadministration_alert');
+$plugins->add_hook("usercp_start", "clubadministration_usercp");
+function clubadministration_usercp(){
+    global $mybb, $db, $cache, $plugins, $templates, $theme, $lang, $header, $headerinclude, $footer, $usercpnav, $options_path, $clubadmin_option;
+    //Die Sprachdatei
+    $lang->load('clubadministration');
 
-function global_clubadministration_alert(){
-    global $db, $mybb, $clubadministration_alert, $templates;
+    require_once MYBB_ROOT . "inc/class_parser.php";;
+    $parser = new postParser;
+    $options = array(
+        "allow_html" => 1,
+        "allow_mycode" => 1,
+        "allow_smilies" => 1,
+        "allow_imgcode" => 1,
+        "filter_badwords" => 0,
+        "nl2br" => 1,
+        "allow_videocode" => 0
+    );
 
-    $select = $db->query("SELECT *
-    FROM ".TABLE_PREFIX."clubs
-    where club_adminok = 0
+    $uid = $mybb->user['uid'];
+
+    // Einstellungen
+    $club_category = $mybb->settings['club_category'];
+    $club_category = explode(", ", $club_category);
+    $club_admin = $mybb->settings['club_admin'];
+    $type_array = array(
+        "Club" => "Club",
+        "Verein" => "Verein",
+    );
+
+    if($mybb->get_input('action') == 'ownclubandsociety'){
+        // Add a breadcrumb
+        add_breadcrumb($lang->clubandsociety_ucp, "usercp.php?action=ownclubandsociety");
+        $own_club_query = $db->query("SELECT *
+        FROM ".TABLE_PREFIX."clubs
+        where club_creator = '".$uid."'
+        order by club_name ASC
     ");
 
-    $count = mysqli_num_rows ($select);
+        while($clubs = $db->fetch_array($own_club_query)){
 
-    if($count > 0){
-        if($mybb->usergroup['canmodcp'] == 1){
-            eval("\$clubadministration_alert = \"" . $templates->get("clubadministration_alert") . "\";");
+            $club_name = "";
+            $club_type = "";
+            $club_desc = "";
+            $club_cat = "";
+            $club_id = "";
+            $type_option = "";
+            $cat_option = "";
+
+            // lass uns die Variabeln mal füllen
+            $club_id = $clubs['club_id'];
+            $club_name = $clubs['club_name'];
+            $club_type = $clubs['club_type'];
+            $club_cat = $clubs['club_category'];
+            $club_desc = $parser->parse_message($clubs['club_description'], $options);
+
+            // Edit optionen
+
+
+            if($club_admin == 1) {
+                $clubadmin_option = "				<tr>
+						<td class='trow1' width='50%'>
+				<strong>{$lang->clubandsociety_edit_leader}</strong>
+			</td>
+			<td class='trow2' width='50%'><input type='text' class='textbox' value='{$clubs['club_leader']}' name='club_leader' style='width: 200px;'></td></tr>";
+            }
+            foreach ($type_array as $type){
+                $select = "";
+                if($club_type == $type){
+                    $select = "selected";
+                }
+                $type_option .= "<option value='{$type}' {$select}>{$type}</option>";
+            }
+
+            foreach ($club_category as $cat){
+                $select = "";
+                if($club_cat == $cat){
+                    $select = "selected";
+                }
+                $cat_option .= "<option value='{$cat}' {$select}>{$cat}</option>";
+            }
+
+            $options_path = "usercp.php?action=ownclubandsociety";
+            eval("\$edit_clubsociety = \"" . $templates->get("clubadministration_edit") . "\";");
+            eval("\$club_options = \"" . $templates->get("clubadministration_club_options") . "\";");
+            eval("\$club_usercp_bit .= \"" . $templates->get("clubadministration_usercp_bit") . "\";");
+        }
+
+
+        // Editieren wir mal
+        if(isset($mybb->input['edit_clubsociety'])){
+
+            $club_id = $mybb->input['club_id'];
+
+            $edit_clubsociety = array(
+                "club_name" => $db->escape_string($mybb->input['clubname']),
+                "club_type" => $db->escape_string($mybb->input['clubtype']),
+                "club_description" => $db->escape_string($mybb->input['clubdesc']),
+                "club_category" => $db->escape_string($mybb->input['clubcat']),
+                "club_creator" => (int)$mybb->input['club_creator'],
+                "club_leader" => (int)$mybb->input['club_leader'],
+                "club_adminok" => 1
+            );
+
+            $db->update_query ("clubs", $edit_clubsociety, "club_id = '{$club_id}'");
+
+            redirect ("usercp.php?action=ownclubandsociety");
+        }
+
+        // Clubs löschen
+        $delete_club = $mybb->input['delete'];
+        if($delete_club){
+            $db->delete_query("clubs", "club_id='{$delete_club}'");
+            redirect ("usercp.php?action=ownclubandsociety");
+        }
+
+
+        eval("\$page = \"".$templates->get("clubadministration_usercp")."\";");
+        output_page($page);
+    }
+
+
+}
+
+
+// Eigene Clubs im User CP verwalten
+
+
+// Benachrichtungen rausschicken
+function clubadministrator_alert() {
+    global $mybb, $lang;
+    $lang->load('clubadministration');
+    /**
+     * Alert formatter for my custom alert type.
+     */
+    class MybbStuff_MyAlerts_Formatter_clubAcceptedFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
+    {
+        /**
+         * Format an alert into it's output string to be used in both the main alerts listing page and the popup.
+         *
+         * @param MybbStuff_MyAlerts_Entity_Alert $alert The alert to format.
+         *
+         * @return string The formatted alert string.
+         */
+        public function formatAlert(MybbStuff_MyAlerts_Entity_Alert $alert, array $outputAlert)
+        {
+
+            $alertContent = $alert->getExtraDetails();
+            return $this->lang->sprintf(
+                $this->lang->clubandsociety_accepted,
+                $outputAlert['from_user'],
+                $alertContent['type'],
+                $alertContent['club'],
+                $outputAlert['dateline']
+            );
+        }
+
+        /**
+         * Init function called before running formatAlert(). Used to load language files and initialize other required
+         * resources.
+         *
+         * @return void
+         */
+        public function init()
+        {
+        }
+
+        /**
+         * Build a link to an alert's content so that the system can redirect to it.
+         *
+         * @param MybbStuff_MyAlerts_Entity_Alert $alert The alert to build the link for.
+         *
+         * @return string The built alert, preferably an absolute link.
+         */
+        public function buildShowLink(MybbStuff_MyAlerts_Entity_Alert $alert)
+        {
+
         }
     }
 
-}
+    if (class_exists('MybbStuff_MyAlerts_AlertFormatterManager')) {
+        $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::getInstance();
 
-/**
- * Was passiert wenn ein User gelöscht wird. funktioniert aber nur, wenn EINZELNE Accounts gelöscht werden.
- */
-$plugins->add_hook("admin_user_users_delete_commit_end", "clubadministration_delete");
-function clubadministration_delete()
-{
-    global $db, $cache, $mybb, $user;
+        if (!$formatterManager) {
+            $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::createInstance($mybb, $lang);
+        }
 
-    $todelete = (int)$user['uid'];
+        $formatterManager->registerFormatter(
+            new MybbStuff_MyAlerts_Formatter_clubAcceptedFormatter($mybb, $lang, 'clubandsociety_accepted')
+        );
+    }
 
-    $db->delete_query('club_members', "uid = " . $todelete . "");
+    /**
+     * Alert formatter for my custom alert type.
+     */
+    class MybbStuff_MyAlerts_Formatter_clubRejectedFormatter extends MybbStuff_MyAlerts_Formatter_AbstractFormatter
+    {
+        /**
+         * Format an alert into it's output string to be used in both the main alerts listing page and the popup.
+         *
+         * @param MybbStuff_MyAlerts_Entity_Alert $alert The alert to format.
+         *
+         * @return string The formatted alert string.
+         */
+        public function formatAlert(MybbStuff_MyAlerts_Entity_Alert $alert, array $outputAlert)
+        {
+
+            $alertContent = $alert->getExtraDetails();
+            return $this->lang->sprintf(
+                $this->lang->clubandsociety_rejected,
+                $outputAlert['from_user'],
+                $alertContent['type'],
+                $alertContent['club'],
+                $outputAlert['dateline']
+            );
+        }
+
+        /**
+         * Init function called before running formatAlert(). Used to load language files and initialize other required
+         * resources.
+         *
+         * @return void
+         */
+        public function init()
+        {
+        }
+
+        /**
+         * Build a link to an alert's content so that the system can redirect to it.
+         *
+         * @param MybbStuff_MyAlerts_Entity_Alert $alert The alert to build the link for.
+         *
+         * @return string The built alert, preferably an absolute link.
+         */
+        public function buildShowLink(MybbStuff_MyAlerts_Entity_Alert $alert)
+        {
+
+        }
+    }
+
+    if (class_exists('MybbStuff_MyAlerts_AlertFormatterManager')) {
+        $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::getInstance();
+
+        if (!$formatterManager) {
+            $formatterManager = MybbStuff_MyAlerts_AlertFormatterManager::createInstance($mybb, $lang);
+        }
+
+        $formatterManager->registerFormatter(
+            new MybbStuff_MyAlerts_Formatter_clubRejectedFormatter($mybb, $lang, 'clubandsociety_rejected')
+        );
+    }
+
 }
