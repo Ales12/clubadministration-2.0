@@ -1,2 +1,0 @@
-# club und Verein Verwaltung
-##
