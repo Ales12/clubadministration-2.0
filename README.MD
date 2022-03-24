@@ -9,6 +9,15 @@ Variabel im Mod CP Nav<br />
 **modcp_nav_users**<br />
 ```{$clubadmin_nav}```
 <br /><br />
+## PHP anpassung
+Hast du andere Werte im ACP angegeben, was die Kategorien der Clubs angeht, muss in der PHP etwas anpassen. Ersetze Aktivitäten einfach mit der ersten Kategorie, die du angegeben hast. Das sorgt dafür, dass der erste Tab als Default angezeigt wird.
+```PHP
+          // muss per Hand angepasst werden, so dass es ein Default gibt!
+            if($club_overview_cat == 'Aktivitäten'){
+                $default = "id=\"defaultOpen\"";
+            }
+```
+<br /><br />
 ## Templates
 clubadministration 	<br />
 clubadministration_addformular 	<br />
