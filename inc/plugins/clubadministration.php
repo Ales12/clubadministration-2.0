@@ -73,7 +73,7 @@ function clubadministration_install()
             'title' => 'Clubkategorie',
             'description' => 'Welche Kategorien soll es an Clubs gehen? (Schüler, Studenten, Erwachsene):',
             'optionscode' => 'text',
-            'value' => 'Vereine, Clubs', // Default
+            'value' => 'Aktivitäten, Soziales, Kreatives, Sonstiges', // Default
             'disporder' => 1
         ),
             // A text setting
@@ -81,7 +81,7 @@ function clubadministration_install()
                 'title' => 'Clubführer',
                 'description' => 'Soll es einen Clubführer geben?:',
                 'optionscode' => 'yesno',
-                'value' => 1, // Default
+                'value' => 0, // Default
                 'disporder' => 1
             ),
 
@@ -195,15 +195,6 @@ document.getElementById("defaultOpen").click();
 		<tr><td colspan="2" class="trow1" align="center"><input type="submit" name="add_clubsociety" id="add" class="button" value="{$lang->clubandsociety_addsubmit}"></td></tr>
 	</table>
 </form>'),
-        'sid' => '-1',
-        'version' => '',
-        'dateline' => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
-
-    $insert_array = array(
-        'title' => 'clubadministration_addformular_link',
-        'template' => $db->escape_string('<div class="innerlist_nav"><a onclick="$(\'#addclub\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \'undefined\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">{$lang->clubandsociety_add}</a>	</div><div class="modal" id="addclub" style="display: none;">{$add_clubsociety}</div>'),
         'sid' => '-1',
         'version' => '',
         'dateline' => TIME_NOW
