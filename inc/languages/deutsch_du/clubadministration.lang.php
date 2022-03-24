@@ -1,5 +1,5 @@
 <?php
-$l['clubandsociety_title'] = "Club- und Vereinverwaltung";
+$l['clubandsociety_title'] = "Club- und Vereinsverwaltung";
 
 // Formular
 $l['clubandsociety_add'] = "Einen neuen club oder Verein hinzufügen";
