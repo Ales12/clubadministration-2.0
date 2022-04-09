@@ -74,7 +74,7 @@ function clubadministration_install()
             'title' => 'Club- und Vereinskategorie',
             'description' => 'Welche Kategorien soll es an Clubs gehen? (Schüler, Studenten, Erwachsene):',
             'optionscode' => 'text',
-            'value' => 'Freizeit, Sport, Sonstige', // Default
+            'value' => 'Vereine, Clubs', // Default
             'disporder' => 1
         ),
         // A text setting
@@ -118,6 +118,26 @@ function clubadministration_install()
 	</tr>
 	<tr><td>
 	{$add_clubsociety}
+		<form id="club_filter" methode="get" action="misc.php?action=clubandsociety_overview">
+			<input type="hidden" name="action" value="clubandsociety_overview">
+			<table style="margin: auto; width: 30%; text-align: center;">
+				<tr><td class="tcat"><strong>{$lang->clubandsociety_filter_type}</strong></td> <td class="tcat"><strong>{$lang->clubandsociety_filter_cat}</strong></td></tr>
+				<tr><td class="trow1">
+					<select name="type_filter">
+						<option value="">Alle Clubs und Vereine</option>
+						<option value="Verein">Vereine</option>
+						<option value="Club">Clubs</option>
+					</select>
+					</td>
+					<td class="trow2">
+						<select name="cat_filter">
+							<option value="">Alle Kategorien</option>
+							{$club_cat}
+						</select>
+					</td></tr>
+				<tr><td class="trow1" colspan="2"><input type="submit" name="club_filter" id="club_filter" class="button" value="{$lang->clubandsociety_filter_submit}"></td></tr>
+			</table>
+		</form>
 <div class="club_flex">
 		{$club_bit}
 	
@@ -581,15 +601,6 @@ function clubadministration_deactivate()
         }
 
         $alertTypeManager->deleteByCode('clubandsociety_accepted');
-    }
-
-    if (class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
-        $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::getInstance();
-
-        if (!$alertTypeManager) {
-            $alertTypeManager = MybbStuff_MyAlerts_AlertTypeManager::createInstance($db, $cache);
-        }
-
         $alertTypeManager->deleteByCode('clubandsociety_rejected');
     }
     require MYBB_ROOT."/inc/adminfunctions_templates.php";
