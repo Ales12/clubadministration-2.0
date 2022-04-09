@@ -14,11 +14,11 @@ if(class_exists('MybbStuff_MyAlerts_AlertTypeManager')) {
 function clubadministration_info()
 {
     return array(
-        "name"			=> "Clubverwaltung",
-        "description"	=> "Hier können User selbst Clubs anlegen und verwalten.",
+        "name"			=> "Club- und Vereinsverwaltung",
+        "description"	=> "Hier können User selbst Clubs und Vereine anlegen und verwalten.",
         "website"		=> "",
         "author"		=> "Ales",
-        "authorsite"	=> "",
+        "authorsite"	=> "https://github.com/Ales12",
         "version"		=> "1.0",
         "guid" 			=> "",
         "codename"		=> "",
@@ -39,8 +39,8 @@ function clubadministration_install()
           `club_type` varchar(500) CHARACTER SET utf8 NOT NULL,
           `club_description` text CHARACTER SET utf8 NOT NULL,
           `club_category` varchar(500) CHARACTER SET utf8 NOT NULL,
+          `club_leader` int(10) NOT NULL,
           `club_creator` int(10) NOT NULL,
-	  `club_leader` int(10) NOT NULL,
           `club_adminok` int(10)  DEFAULT 0 NOT NULL,
           PRIMARY KEY (`club_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
@@ -49,6 +49,7 @@ function clubadministration_install()
           `mem_id` int(10) NOT NULL auto_increment,
           `club_id` int(11) NOT NULL,
             `club_uid` int(10) NOT NULL,
+            `club_leader` int(10) NOT NULL,
           PRIMARY KEY (`mem_id`)
         ) ENGINE=MyISAM".$db->build_create_table_collation());
     }
@@ -59,7 +60,7 @@ function clubadministration_install()
 
     $setting_group = array(
         'name' => 'clubadministrationsettings',
-        'title' => 'Club- & Vereinverwaltung',
+        'title' => 'Club- & Vereinsverwaltung',
         'description' => 'Hier sind alle Einstellungen für die Club- und Vereinverwaltung.',
         'disporder' => 3, // The order your setting group will display
         'isdefault' => 0
@@ -70,20 +71,20 @@ function clubadministration_install()
     $setting_array = array(
         // A text setting
         'club_category' => array(
-            'title' => 'Clubkategorie',
+            'title' => 'Club- und Vereinskategorie',
             'description' => 'Welche Kategorien soll es an Clubs gehen? (Schüler, Studenten, Erwachsene):',
             'optionscode' => 'text',
-            'value' => 'Aktivitäten, Soziales, Kreatives, Sonstiges', // Default
+            'value' => 'Vereine, Clubs', // Default
             'disporder' => 1
         ),
-            // A text setting
-            'club_admin' => array(
-                'title' => 'Clubführer',
-                'description' => 'Soll es einen Clubführer geben?:',
-                'optionscode' => 'yesno',
-                'value' => 0, // Default
-                'disporder' => 1
-            ),
+        // A text setting
+        'club_admin' => array(
+            'title' => 'Club- und Vereinsleitung',
+            'description' => 'Soll es eine Leitung für Clubs und Vereine geben?:',
+            'optionscode' => 'yesno',
+            'value' => 1, // Default
+            'disporder' => 1
+        ),
 
     );
 
@@ -116,38 +117,16 @@ function clubadministration_install()
 	</td>
 	</tr>
 	<tr><td>
-	<div class="club_addclub"><a onclick="$(\'#addclub\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \'undefined\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">{$lang->clubandsociety_add}</a>	</div><div class="modal" id="addclub" style="display: none;">{$add_clubsociety}</div>	
-		<div class="club_flex">
-			<div class="club_tab">
-				{$club_menu}
-			</div>
-		{$club_overview}
-		</div>
-		</td>
+	{$add_clubsociety}
+<div class="club_flex">
+		{$club_bit}
+	
+		</div></td>
 	</tr>
 	</table>
 {$footer}
 </body>
-</html>
-
-<script>
-function openCity(evt, cityName) {
-  var i, tabcontent, tablinks;
-  tabcontent = document.getElementsByClassName("tabcontent");
-  for (i = 0; i < tabcontent.length; i++) {
-    tabcontent[i].style.display = "none";
-  }
-  tablinks = document.getElementsByClassName("tablinks");
-  for (i = 0; i < tablinks.length; i++) {
-    tablinks[i].className = tablinks[i].className.replace(" active", "");
-  }
-  document.getElementById(cityName).style.display = "block";
-  evt.currentTarget.className += "active";
-}
-
-// Get the element with id="defaultOpen" and click on it
-document.getElementById("defaultOpen").click();
-</script>'),
+</html>'),
         'sid' => '-1',
         'version' => '',
         'dateline' => TIME_NOW
@@ -157,44 +136,42 @@ document.getElementById("defaultOpen").click();
     $insert_array = array(
         'title' => 'clubadministration_addformular',
         'template' => $db->escape_string('<form id="add_clubsociety"  method="post"  action="misc.php?action=clubandsociety_overview">
-	<table cellspacing="2" cellpadding="5" style="margin: auto;">
-		<tr><td class="tcat" colspan="2"><strong>{$lang->clubandsociety_add}</strong></td></tr>
-		<tr>
-			<td class="trow1" width="50%">
-				<strong>{$lang->clubandsociety_addtitle}</strong>
-			</td>
-			<td class="trow2" width="50%"><input type="text" class="textbox" placeholder="Der Titel des Clubs/Vereins" name="clubname" style="width: 200px;">
-			</td>	</tr>
-			<tr>
-						<td class="trow1" width="50%">
-				<strong>{$lang->clubandsociety_addtype}</strong>
-			</td>
-	
-			<td class="trow2" width="50%">
+	<div class="club_flex_formular">
+		<div class="thead" style="width: 100%;"><strong>{$lang->clubandsociety_add}</strong></div>
+		<div class="club_formular">
+			<div class="tcat">	<strong>{$lang->clubandsociety_addtitle}</strong></div>
+			<input type="text" class="textbox" placeholder="Der Titel des Clubs/Vereins" name="clubname" style="width: 200px;">
+		</div>
+			<div class="club_formular">
+			<div class="tcat">	<strong>{$lang->clubandsociety_addtype}</strong></div>
 				<select name="clubtype">
 					<option>Club</option>
 					<option>Verein</option>
 				</select>
-			</td>
-		</tr>
-					<tr>
-						<td class="trow1" width="50%">
-				<strong>{$lang->clubandsociety_addcat}</strong>
-			</td>
-	
-			<td class="trow2" width="50%">
-				<select name="clubcat">
+		</div>
+			<div class="club_formular">
+			<div class="tcat">	<strong>{$lang->clubandsociety_addcat}</strong></div>
+			<select name="clubcat">
 {$club_cat}
 				</select>
-			</td>
-		</tr>
-				{$clubadmin_option}
-		<tr><td class="trow1" colspan="2">	<strong>{$lang->clubandsociety_adddesc}</strong></td><tr/>
-		<tr>
-			<td class="trow2" colspan="2"><textarea class="textarea" name="clubdesc" id="clubdesc" rows="5" cols="30" style="width:99%;" placeholder="Beschreibe hier den Club/Verein. Was macht ihn aus, wo liegt er und von wem wird er geführt?"></textarea></td></tr>
-		<tr><td colspan="2" class="trow1" align="center"><input type="submit" name="add_clubsociety" id="add" class="button" value="{$lang->clubandsociety_addsubmit}"></td></tr>
-	</table>
+		</div>
+	{$clubadmin_option}
+					<div class="club_formular" style="width: 90%">
+			<div class="tcat">	<strong>{$lang->clubandsociety_adddesc}</strong></div>
+<textarea class="textarea" name="clubdesc" id="clubdesc" rows="5" cols="30" style="width:99%;" placeholder="Beschreibe hier den Club/Verein. Was macht ihn aus, wo liegt er und von wem wird er geführt?"></textarea>
+		</div>
+		<div class="club_formular" style="width:90%; text-align:center;"><input type="submit" name="add_clubsociety" id="add" class="button" value="{$lang->clubandsociety_addsubmit}"></div>
+	</div>
 </form>'),
+        'sid' => '-1',
+        'version' => '',
+        'dateline' => TIME_NOW
+    );
+    $db->insert_query("templates", $insert_array);
+
+    $insert_array = array(
+        'title' => 'clubadministration_addformular_link',
+        'template' => $db->escape_string('<div class="innerlist_nav"><a onclick="$(\'#addclub\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \'undefined\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">{$lang->clubandsociety_add}</a>	</div><div class="modal" id="addclub" style="display: none;">{$add_clubsociety}</div>'),
         'sid' => '-1',
         'version' => '',
         'dateline' => TIME_NOW
@@ -460,49 +437,25 @@ document.getElementById("defaultOpen").click();
 
 }
 
- /* Style the tab */
-.club_tab {
-  overflow: hidden;
-  border: 1px solid #ccc;
-  background-color: #f1f1f1;	
-	width: 160px;
-	text-align: center;
-	display: flex;
-flex-wrap: wrap;
-justify-content: center;
+ .club_flex_formular{
+		display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	width: 50%;
+	margin: 5px auto 20px auto;
+	
 }
 
-/* Style the buttons that are used to open the tab content */
-.club_tab button {
-  background: inherit;
-  float: left;
-  border: none;
-  outline: none;
-  cursor: pointer;
-  padding: 14px 16px;
-  transition: 0.3s;
-	width: 150px;
-	border: none;
+.club_formular{
+	min-width: 45%;	
+	max-width: 90%;
+text-align: center;
+	margin: 2px 5px 5px 5px;
 }
 
-/* Change background color of buttons on hover */
-.club_tab button:hover {
-  background-color: #ddd;
+.club_formular .tcat{
+	margin-bottom: 10px;	
 }
-
-/* Create an active/current tablink class */
-.club_tab button.active {
-  background-color: #ccc;
-		width: 150px;
-}
-
-/* Style the tab content */
-.tabcontent {
-  display: none;
-  padding: 6px 12px;
-	box-sizing: border-box;
-	width: 85%;
-} 
 
 .club_addclub{
 	text-align: center;
@@ -707,175 +660,229 @@ function clubadministration()
 
 
 
-        if ($mybb->get_input('action') == 'clubandsociety_overview') {
-            // Do something, for example I'll create a page using the hello_world_template
+    if ($mybb->get_input('action') == 'clubandsociety_overview') {
+        // Do something, for example I'll create a page using the hello_world_template
 
-            // Add a breadcrumb
-            add_breadcrumb($lang->clubandsociety_title, "misc.php?action=clubandsociety_overview");
+        // Add a breadcrumb
+        add_breadcrumb($lang->clubandsociety_title, "misc.php?action=clubandsociety_overview");
 
-            if($mybb->usergroup['canaddclub'] == 1){
 
-                $club_category = explode(", ", $club_category);
-                foreach ($club_category as $club){
+        $club_category = explode(", ", $club_category);
+        foreach ($club_category as $club){
 
-                    $club_cat .= "<option>{$club}</option>";
-                }
+            $club_cat .= "<option>{$club}</option>";
+        }
 
-                if($club_admin == 1){
-                    $clubadmin_option = "	<tr>
-						<td class=\"trow1\" width='50%'>
-				<strong>{$lang->clubandsociety_addadmin}</strong>
-			</td>
-	
-			<td class=\"trow2\" width=\"50%\">
-				<select name=\"clubadmin\">
+        if($mybb->usergroup['canaddclub'] == 1){
+
+            if($club_admin == 1){
+                $clubadmin_option = "
+			<div class=\"club_formular\">
+			<div class='tcat'>	<strong>{$lang->clubandsociety_addadmin}</strong></div>
+					<select name=\"clubadmin\">
 					<option value='0'>Nein</option>
 					<option value='1'>Ja</option>
 				</select>
-			</td>
-		</tr>";
-                }
-
-               eval("\$add_link = \"" . $templates->get("clubadministration_addformular_link") . "\";");
-                eval("\$add_clubsociety = \"" . $templates->get("clubadministration_addformular") . "\";");
-
-                if(isset($mybb->input['add_clubsociety'])){
-                    if($mybb->usergroup['canmodcp'] == 1){
-                        $admin_ok = 1;
-                    } else{
-                        $admin_ok = 0;
-                    }
-
-                    $clubadmin = $_POST['clubadmin'];
-                    if($clubadmin == 1){
-                    $club_leader = (int)$mybb->user['uid'];
-                    } else{
-                        $club_leader = 0;
-
-                    }
-
-                    $add_clubsociety = array(
-                        "club_name" => $db->escape_string($_POST['clubname']),
-                        "club_type" => $db->escape_string($_POST['clubtype']),
-                        "club_description" => $db->escape_string($_POST['clubdesc']),
-                        "club_category" => $db->escape_string($_POST['clubcat']),
-                        "club_creator" => $mybb->user['uid'],
-                        "club_leader" => $club_leader,
-                        "club_adminok" => $admin_ok
-                    );
-
-                    $db->insert_query ("clubs", $add_clubsociety);
-
-                    redirect ("misc.php?action=clubandsociety_overview");
-                }
-
+		</div>";
             }
 
+            eval("\$add_link = \"" . $templates->get("clubadministration_addformular_link") . "\";");
+            eval("\$add_clubsociety = \"" . $templates->get("clubadministration_addformular") . "\";");
 
-            // lass uns mal die Kategorien durchgehen, so dass wir alle anzeigen können!
-            foreach ($club_category as $club_overview_cat){
-                $default = "";
-
-                // muss per Hand angepasst werden, so dass es ein Default gibt!
-                if($club_overview_cat == 'Aktivitäten'){
-                    $default = "id=\"defaultOpen\"";
+            if(isset($mybb->input['add_clubsociety'])){
+                if($mybb->usergroup['canmodcp'] == 1){
+                    $admin_ok = 1;
+                } else{
+                    $admin_ok = 0;
                 }
 
-                $club_menu .="<button class=\"tablinks\" onclick=\"openCity(event, '{$club_overview_cat}')\"  {$default}>{$club_overview_cat}</button>";
+                $clubadmin = $_POST['clubadmin'];
+                if($clubadmin == 1){
+                    $club_leader = (int)$mybb->user['uid'];
+                } else{
+                    $club_leader = 0;
+
+                }
+
+                $add_clubsociety = array(
+                    "club_name" => $db->escape_string($_POST['clubname']),
+                    "club_type" => $db->escape_string($_POST['clubtype']),
+                    "club_description" => $db->escape_string($_POST['clubdesc']),
+                    "club_category" => $db->escape_string($_POST['clubcat']),
+                    "club_creator" => $mybb->user['uid'],
+                    "club_leader" => $club_leader,
+                    "club_adminok" => $admin_ok
+                );
+
+                $db->insert_query ("clubs", $add_clubsociety);
+
+                redirect ("misc.php?action=clubandsociety_overview");
+            }
+
+        }
 
 
-                $club_bit = "";
+        $club_type_filter = "";
+        $club_cat_filter = "";
+        $club_bit = "";
 
-                // Einmal alle Clubs auslesen, die in der aktuellen Kategorie sind!
-                $club_query = $db->query("SELECT *
+        if(isset($mybb->input['club_filter'])){
+            if($mybb->input['type_filter'] != '') {
+                $club_type_filter = "and club_type = '" . $mybb->input['type_filter'] . "'";
+            }
+            if($mybb->input['cat_filter'] != '') {
+                $club_cat_filter = "and club_category  = '" . $mybb->input['cat_filter'] . "'";
+            }
+            $url_extra = "&type_filter={$mybb->input['type_filter']}&cat_filter={$mybb->input['cat_filter']}&club_filter=Ansicht+filtern";
+        }
+
+        $select_clubs = $db->query("SELECT COUNT(*) AS clubs
+            FROM ".TABLE_PREFIX."canons
+                WHERE club_adminok  = 1
+               {$club_type_filter}
+               {$club_cat_filter}
+        ");
+
+        $count = $db->fetch_field($select_clubs, "clubs");;
+        $perpage = 8;
+        $page = intval($mybb->input['page']);
+
+        if($page) {
+            $start = ($page-1) *$perpage;
+        }
+        else {
+            $start = 0;
+            $page = 1;
+        }
+        $end = $start + $perpage;
+        $lower = $start+1;
+        $upper = $end;
+        if($upper > $count) {
+            $upper = $count;
+        }
+
+        $url = "{$mybb->settings['bburl']}/misc.php?action=clubandsociety_overview{$url_extra}";
+
+        // Einmal alle Clubs auslesen, die in der aktuellen Kategorie sind!
+        $club_query = $db->query("SELECT *
                 FROM ".TABLE_PREFIX."clubs 
-                WHERE club_category  LIKE '%".$club_overview_cat."%'
-                and club_adminok  = 1
+                WHERE club_adminok  = 1
+               {$club_type_filter}
+               {$club_cat_filter}
                 ORDER BY club_name ASC
                 ");
 
-                while($club = $db->fetch_array($club_query)){
-                    $club_leader = "";
-                    $club_leader = "";
-                    $club_id = $club['club_id'];
-                    $club_leader_uid = $club['club_leader'];
+        while($club = $db->fetch_array($club_query)) {
+            $club_leader = "";
+            $club_leader = "";
+            $club_id = $club['club_id'];
+            $club_leader_uid = $club['club_leader'];
 
-                    $club_desc = $parser->parse_message($club['club_description'], $options);
+            $club_desc = $parser->parse_message($club['club_description'], $options);
 
-                    // Gib es einen club/Vereinsführer, dann zeig das doch bitte an :D und weil mit Link hübscher, lese vorher die User bitte aus
-                    if($club_admin == 1 and $club['club_leader'] != 0) {
-                        $leader_query =  $db->simple_select("users", "*", "uid=$club_leader_uid");
-                        $leader = $db->fetch_array($leader_query);
+            // Gib es einen club/Vereinsführer, dann zeig das doch bitte an :D und weil mit Link hübscher, lese vorher die User bitte aus
+            if ($club_admin == 1 and $club['club_leader'] != 0) {
+                $leader_query = $db->simple_select("users", "*", "uid=$club_leader_uid");
+                $leader = $db->fetch_array($leader_query);
 
-                        $username = format_name($leader['username'], $leader['usergroup'], $leader['displaygroup']);
-                        $club_leader = build_profile_link($username, $leader['uid']);
-                        $club_leader = "{$lang->clubandsociety_overview_leader}".$club_leader;
-                    }
-                    if($mybb->usergroup['canjoinclub'] == 1) {
-                        $club_join = "<a href='misc.php?action=clubandsociety_overview&club_join={$club_id}'>{$lang->clubandsociety_overview_join}</a>";
-                    }
+                if($club['club_leader'] == $mybb->user['uid'] or $mybb->usergroup['canmodcp'] == 1){
+                    $leader_down = "<a href='misc.php?action=clubandsociety_overview&down_clubleader={$club_id}'>{$lang->clubandsociety_join_leader_down}</a>";
+                }
 
-                    // Clubmitglieder auslesen
-                    $club_bit_member  = "";
-                    $clubmembers_query =  $db->query("SELECT *
-                FROM ".TABLE_PREFIX."club_members cm
-                left join ".TABLE_PREFIX."users u
+                $username = format_name($leader['username'], $leader['usergroup'], $leader['displaygroup']);
+                $club_leader = build_profile_link($username, $leader['uid']);
+                $club_leader = "{$lang->clubandsociety_overview_leader}" . $club_leader. $leader_down;
+            } elseif($club_admin == 1 and $club['club_leader'] == 0){
+                $club_leader = "<a href='misc.php?action=clubandsociety_overview&get_clubleader={$club_id}'>{$lang->clubandsociety_join_leader}</a>";
+            } else{
+                $club_leader = "";
+            }
+
+            if ($mybb->usergroup['canjoinclub'] == 1) {
+                $club_join = "<a href='misc.php?action=clubandsociety_overview&club_join={$club_id}'>{$lang->clubandsociety_overview_join}</a>";
+            }
+
+
+            // Clubmitglieder auslesen
+            $club_bit_member = "";
+            $clubmembers_query = $db->query("SELECT *
+                FROM " . TABLE_PREFIX . "club_members cm
+                left join " . TABLE_PREFIX . "users u
                 on (cm.club_uid = u.uid)
-                WHERE club_id = '".$club_id."'
+                WHERE club_id = '" . $club_id . "'
                 ORDER BY u.username ASC
                 ");
-                    while($clubmember = $db->fetch_array($clubmembers_query)){
-                        $clubmember_uid = $clubmember['club_uid'];
-                        $username = format_name($clubmember['username'], $clubmember['usergroup'], $clubmember['displaygroup']);
-                        $club_members = build_profile_link($username, $clubmember['uid']);
+            while ($clubmember = $db->fetch_array($clubmembers_query)) {
+                $clubmember_uid = $clubmember['club_uid'];
+                $username = format_name($clubmember['username'], $clubmember['usergroup'], $clubmember['displaygroup']);
+                $club_members = build_profile_link($username, $clubmember['uid']);
 
-                        /*
-                         * Wenn schon Mitglied, dann sollte die Möglichkeit, beizutreten, nicht mehr angezeigt werden. Leere somit diese Variabel und gebe stattdessen die Möglichkeit den Club/Verein zu verlassen.
-                         */
-                        if($clubmember_uid == $mybb->user['uid']){
-                            $club_join = "";
-                            $club_leave = "<a href='misc.php?action=clubandsociety_overview&club_leave={$club_id}&club_member={$clubmember_uid}'>{$lang->clubandsociety_overview_leave}</a>";
-                        }
-
-                        eval("\$club_bit_member .= \"" . $templates->get("clubadministration_bit_clubmembers") . "\";");
-                    }
-
-
-                    eval("\$club_bit .= \"" . $templates->get("clubadministration_bit") . "\";");
+                /*
+                 * Wenn schon Mitglied, dann sollte die Möglichkeit, beizutreten, nicht mehr angezeigt werden. Leere somit diese Variabel und gebe stattdessen die Möglichkeit den Club/Verein zu verlassen.
+                 */
+                if ($clubmember_uid == $mybb->user['uid']) {
+                    $club_join = "";
+                    $club_leave = "<a href='misc.php?action=clubandsociety_overview&club_leave={$club_id}&club_member={$clubmember_uid}'>{$lang->clubandsociety_overview_leave}</a>";
                 }
-                eval("\$club_overview .= \"" . $templates->get("clubadministration_category") . "\";");
+
+                eval("\$club_bit_member .= \"" . $templates->get("clubadministration_bit_clubmembers") . "\";");
             }
 
-            // Club Beitreten
-            $club_join = $mybb->input['club_join'];
-            if($club_join){
-                $join_club_array = array(
-                    "club_id" => (int)$club_join,
-                    "club_uid" => (int)$mybb->user['uid']
-                );
 
-                $db->insert_query ("club_members", $join_club_array);
-                redirect ("misc.php?action=clubandsociety_overview");
-            }
-
-            // Club verlassen
-
-            $club_leave = $mybb->input['club_leave'];
-            if($club_leave){
-                $clubmember = $mybb->input['club_member'];
-                $db->delete_query("club_members", "club_id ='$club_leave' and club_uid = '$clubmember'");
-                redirect ("misc.php?action=clubandsociety_overview");
-            }
-
-            eval("\$menu = \"".$templates->get("listen_nav")."\";");
-            eval("\$page = \"" . $templates->get("clubadministration") . "\";");
-            output_page($page);
+            eval("\$club_bit .= \"" . $templates->get("clubadministration_bit") . "\";");
         }
+
+        // Club Beitreten
+        $club_join = $mybb->input['club_join'];
+        if($club_join){
+            $join_club_array = array(
+                "club_id" => (int)$club_join,
+                "club_uid" => (int)$mybb->user['uid']
+            );
+
+            $db->insert_query ("club_members", $join_club_array);
+            redirect ("misc.php?action=clubandsociety_overview");
+        }
+
+        // Club verlassen
+
+        $club_leave = $mybb->input['club_leave'];
+        if($club_leave){
+            $clubmember = $mybb->input['club_member'];
+            $db->delete_query("club_members", "club_id ='$club_leave' and club_uid = '$clubmember'");
+            redirect ("misc.php?action=clubandsociety_overview");
+        }
+
+        // Club führung werden
+
+        $get_clubleader = $mybb->input['get_clubleader'];
+        if($get_clubleader){
+            $get_clubleader_array = array(
+                "club_leader" => $mybb->user['uid'],
+            );
+            $db->update_query("clubs", $get_clubleader_array, "club_id = $get_clubleader");
+            redirect ("misc.php?action=clubandsociety_overview");
+        }
+
+        $down_clubleader = $mybb->input['down_clubleader'];
+        if($down_clubleader){
+            $down_clubleader_array = array(
+                "club_leader" => 0,
+            );
+            $db->update_query("clubs", $down_clubleader_array, "club_id = $down_clubleader");
+            redirect ("misc.php?action=clubandsociety_overview");
+        }
+
+
+        eval("\$menu = \"".$templates->get("listen_nav")."\";");
+        eval("\$page = \"" . $templates->get("clubadministration") . "\";");
+        output_page($page);
     }
+}
 
 
 
-    // mod cp navigation
+// mod cp navigation
 $plugins->add_hook("modcp_nav", "clubadministration_modcp_nav");
 function clubadministration_modcp_nav(){
     global $clubadmin_nav, $lang;
@@ -977,10 +984,10 @@ function clubadministration_modcp()
             eval("\$edit_clubsociety = \"" . $templates->get("clubadministration_edit") . "\";");
             eval("\$club_options = \"" . $templates->get("clubadministration_club_options") . "\";");
             eval("\$club_modcp_bit .= \"" . $templates->get("clubadministration_modcp_bit") . "\";");
-            }
+        }
 
 
-            // Editieren wir mal
+        // Editieren wir mal
         if(isset($mybb->input['edit_clubsociety'])){
 
             $club_id = $mybb->input['club_id'];
