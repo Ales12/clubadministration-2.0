@@ -74,7 +74,7 @@ function clubadministration_install()
             'title' => 'Club- und Vereinskategorie',
             'description' => 'Welche Kategorien soll es an Clubs gehen? (Schüler, Studenten, Erwachsene):',
             'optionscode' => 'text',
-            'value' => 'Vereine, Clubs', // Default
+            'value' => 'Freizeit, Sport, Sonstige', // Default
             'disporder' => 1
         ),
         // A text setting
