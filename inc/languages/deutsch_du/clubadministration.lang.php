@@ -46,5 +46,5 @@ $l['clubandsociety_ucp'] = "Übersicht eigener Clubs/Vereine";
 // Alerts
 $l['clubandsociety_accepted'] = "{1} hat deinen {2} <b>{3}</b> akzeptiert.";
 $l['clubandsociety_rejected'] = "{1} hat deinen {2} <b>{3}</b> abgelehnt. Melde dich beim Team, wenn du Fragen dazu hast!";
-$l['myalerts_settings_clubandsociety_accepted'] = "Möchtest du eine Benachrichtung bekommen, wenn dein Club angenommen wurde?";
-$l['myalerts_settings_clubandsociety_rejected'] = "Möchtest du eine Benachrichtung bekommen, wenn dein Club abgelehnt wurde?";
+$l['myalerts_setting_clubandsociety_accepted'] = "Benachrichtung, wenn dein Club angenommen wurde?";
+$l['myalerts_setting_clubandsociety_rejected'] = "Benachrichtung, wenn dien Club abgelehnt wurde?";
