@@ -740,7 +740,7 @@ function clubadministration()
         }
 
         $select_clubs = $db->query("SELECT COUNT(*) AS clubs
-            FROM ".TABLE_PREFIX."canons
+            FROM ".TABLE_PREFIX."clubs
                 WHERE club_adminok  = 1
                {$club_type_filter}
                {$club_cat_filter}
