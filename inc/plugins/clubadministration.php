@@ -169,14 +169,6 @@ function clubadministration_install()
     );
     $db->insert_query("templates", $insert_array);
 
-    $insert_array = array(
-        'title' => 'clubadministration_addformular_link',
-        'template' => $db->escape_string('<div class="innerlist_nav"><a onclick="$(\'#addclub\').modal({ fadeDuration: 250, keepelement: true, zIndex: (typeof modal_zindex !== \'undefined\' ? modal_zindex : 9999) }); return false;" style="cursor: pointer;">{$lang->clubandsociety_add}</a>	</div><div class="modal" id="addclub" style="display: none;">{$add_clubsociety}</div>'),
-        'sid' => '-1',
-        'version' => '',
-        'dateline' => TIME_NOW
-    );
-    $db->insert_query("templates", $insert_array);
 
     $insert_array = array(
         'title' => 'clubadministration_bit',
