@@ -640,7 +640,7 @@ $plugins->add_hook('misc_start', 'clubadministration');
 function clubadministration()
 {
     global $mybb, $templates, $lang, $header, $headerinclude, $footer, $page, $db, $parser, $options, $club_category, $club_cat, $clubadmin_option, $club_leader, $club_bit, $clubmember_uid, $menu;
-    global $club_desc, $club_join, $club_members, $club_bit_member, $club_leave;
+    global $club_desc, $club_join, $club_members, $club_bit_member, $club_leave, $admin_club_leave, $become_leader;
     $lang->load('clubadministration');
 
     ///der Parser halt
@@ -777,12 +777,15 @@ function clubadministration()
 
         while($club = $db->fetch_array($club_query)) {
             $club_leader = "";
-            $club_join = "";
-		$club_leave = "";
+             
             $club_id = $club['club_id'];
             $club_leader_uid = $club['club_leader'];
 
             $club_desc = $parser->parse_message($club['club_description'], $options);
+            if ($mybb->usergroup['canjoinclub'] == 1) {
+                $club_join = "<a href='misc.php?action=clubandsociety_overview&club_join={$club_id}'>{$lang->clubandsociety_overview_join}</a>";
+                $become_leader ="<a href='misc.php?action=clubandsociety_overview&get_clubleader={$club_id}'>{$lang->clubandsociety_join_leader}</a>";
+            }
 
             // Gib es einen club/Vereinsführer, dann zeig das doch bitte an :D und weil mit Link hübscher, lese vorher die User bitte aus
             if ($club_admin == 1 and $club['club_leader'] != 0) {
@@ -795,16 +798,13 @@ function clubadministration()
 
                 $username = format_name($leader['username'], $leader['usergroup'], $leader['displaygroup']);
                 $club_leader = build_profile_link($username, $leader['uid']);
-                $club_leader = "{$lang->clubandsociety_overview_leader}" . $club_leader. $leader_down;
+                $club_leader = "{$lang->clubandsociety_overview_leader}" . $club_leader." ". $leader_down;
             } elseif($club_admin == 1 and $club['club_leader'] == 0){
-                $club_leader = "<a href='misc.php?action=clubandsociety_overview&get_clubleader={$club_id}'>{$lang->clubandsociety_join_leader}</a>";
+                $club_leader = "{$lang->clubandsociety_overview_leader} Niemanden {$become_leader}";
             } else{
                 $club_leader = "";
             }
 
-            if ($mybb->usergroup['canjoinclub'] == 1) {
-                $club_join = "<a href='misc.php?action=clubandsociety_overview&club_join={$club_id}'>{$lang->clubandsociety_overview_join}</a>";
-            }
 
 
             // Clubmitglieder auslesen
@@ -817,15 +817,24 @@ function clubadministration()
                 ORDER BY u.username ASC
                 ");
             while ($clubmember = $db->fetch_array($clubmembers_query)) {
+                $club_leave = "";
+          
                 $clubmember_uid = $clubmember['club_uid'];
                 $username = format_name($clubmember['username'], $clubmember['usergroup'], $clubmember['displaygroup']);
+                $club_members = build_profile_link($username, $clubmember['uid']);
 
                 /*
                  * Wenn schon Mitglied, dann sollte die Möglichkeit, beizutreten, nicht mehr angezeigt werden. Leere somit diese Variabel und gebe stattdessen die Möglichkeit den Club/Verein zu verlassen.
                  */
                 if ($clubmember_uid == $mybb->user['uid']) {
                     $club_join = "";
-                    $club_leave = "<a href='misc.php?action=clubandsociety_overview&club_leave={$club_id}&club_member={$clubmember_uid}'>{$lang->clubandsociety_overview_leave}</a>";
+                    $club_leave = " <a href='misc.php?action=clubandsociety_overview&club_leave={$club_id}&club_member={$clubmember_uid}'>{$lang->clubandsociety_overview_leave}</a>";
+                }
+
+               if($mybb->usergroup['canmodcp'] == 1){
+                    $club_leave = " <a href='misc.php?action=clubandsociety_overview&club_leave={$club_id}&club_member={$clubmember_uid}'>{$lang->clubandsociety_overview_leave}</a>";
+                } else{
+                    $club_leave = "";
                 }
 
                 eval("\$club_bit_member .= \"" . $templates->get("clubadministration_bit_clubmembers") . "\";");
