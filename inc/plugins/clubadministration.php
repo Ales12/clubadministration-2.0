@@ -777,7 +777,8 @@ function clubadministration()
 
         while($club = $db->fetch_array($club_query)) {
             $club_leader = "";
-            $club_leader = "";
+            $club_join = "";
+		$club_leave = "";
             $club_id = $club['club_id'];
             $club_leader_uid = $club['club_leader'];
 
@@ -818,7 +819,6 @@ function clubadministration()
             while ($clubmember = $db->fetch_array($clubmembers_query)) {
                 $clubmember_uid = $clubmember['club_uid'];
                 $username = format_name($clubmember['username'], $clubmember['usergroup'], $clubmember['displaygroup']);
-                $club_members = build_profile_link($username, $clubmember['uid']);
 
                 /*
                  * Wenn schon Mitglied, dann sollte die Möglichkeit, beizutreten, nicht mehr angezeigt werden. Leere somit diese Variabel und gebe stattdessen die Möglichkeit den Club/Verein zu verlassen.
